@@ -16,7 +16,8 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NODE_ENV=production
-# Install production dependencies only
+# Install curl and production dependencies
+RUN apk --no-cache add curl
 RUN npm ci --only=production
 # Copy built application
 COPY --from=builder /app/.next ./.next

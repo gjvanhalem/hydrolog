@@ -7,13 +7,33 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/hydro.db
+      - LOG_LEVEL=info
+      # Add any other environment variables here
     volumes:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads
+      - ./logs:/app/logs
     restart: unless-stopped
-    # Add healthcheck
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Add healthcheck    healthcheck:
+      test: |
+        CMD-SHELL
+        wget -q --spider http://localhost:3000/api/health || exit 1;
+        wget -q --spider http://localhost:3000/api/metrics || exit 1;
+        [ -f /app/data/hydro.db ] || exit 1;
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M

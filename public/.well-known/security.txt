@@ -1,0 +1,7 @@
+# Security Policy and Contact Information
+Contact: mailto:security@example.com
+Expires: 2026-05-11T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://example.com/.well-known/security.txt
+Policy: https://example.com/security-policy
+Hiring: https://example.com/security-jobs
