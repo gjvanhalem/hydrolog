@@ -3,10 +3,10 @@ import './globals.css';
 import Navigation from './components/Navigation';
 import Script from 'next/script';
 
-export const metadata: Metadata = {
-  title: 'HydroLog',
-  description: 'Monitor and manage your hydroponic garden',
-};
+//export const metadata: Metadata = {
+//  title: 'HydroLog',
+//  description: 'Monitor and manage your hydroponic garden',
+//};
 
 export default function RootLayout({
   children,

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { logger } from '@/lib/logger';
-import { updateMetrics } from '@/app/api/metrics/route';
+import { updateMetrics } from '@/lib/metrics';
 import { rateLimiter } from '@/lib/rate-limiter';
 
 export async function middleware(request: NextRequest) {

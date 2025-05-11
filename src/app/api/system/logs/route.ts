@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(
+  request: NextRequest,
+  context: { params: {} }
+) {
   try {
     const systemLogs = await prisma.systemLog.findMany({
       orderBy: {
@@ -23,7 +26,10 @@ type SystemLogInput = {
   logDate?: string;
 };
 
-export async function POST(req: NextRequest) {
+export async function POST(
+  req: NextRequest,
+  context: { params: {} }
+) {
   try {
     const { type, value, unit, note, logDate } = (await req.json()) as SystemLogInput;
     const log = await prisma.systemLog.create({

@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  context: { params: {} }
+) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

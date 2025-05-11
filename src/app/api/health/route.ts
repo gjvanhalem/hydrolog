@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
-export async function GET() {
+export async function GET(
+  request: NextRequest
+) {
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;
