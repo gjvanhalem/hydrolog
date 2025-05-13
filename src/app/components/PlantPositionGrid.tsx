@@ -16,10 +16,7 @@ interface PlantPositionGridProps {
 
 export default function PlantPositionGrid({ plants, highlightPosition, className = '' }: PlantPositionGridProps) {  // Filter out removed plants and create positions array
   const activePlants = plants.filter(p => p.status !== 'removed');
-
-  // Log for debugging
-  console.log('All plants:', plants.map(p => ({ id: p.id, name: p.name, status: p.status, position: p.position })));
-  console.log('Active plants:', activePlants.map(p => ({ id: p.id, name: p.name, status: p.status, position: p.position })));
+  // Active plants are filtered for display
   
   // Define the positions based on the 4-5-3 layout
   const rows = [

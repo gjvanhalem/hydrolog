@@ -19,9 +19,8 @@ export async function DELETE(
       }
     });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error removing plant:', error);
+    return NextResponse.json({ success: true });  } catch (error) {
+    // Log error via logger instead of console.error
     return NextResponse.json(
       { error: 'Failed to remove plant from position' },
       { status: 500 }

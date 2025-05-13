@@ -64,9 +64,8 @@ export default function SystemLogForm() {
         logDate: new Date().toISOString().split('T')[0]
       });
       router.refresh();
-      router.push('/system/daily');
-    } catch (error) {
-      console.error('Error submitting measurement:', error);
+      router.push('/system/daily');    } catch (error) {
+      // Set the error message for the user to see
       setError(error instanceof Error ? error.message : 'Failed to submit measurement');
     } finally {
       setIsSubmitting(false);

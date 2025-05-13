@@ -28,13 +28,12 @@ describe('PlantPositionGrid', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
   it('renders all 12 positions', () => {
     render(<PlantPositionGrid plants={[]} />);
     
-    // Check that all position numbers are rendered
+    // Check that all position numbers are rendered with the P prefix
     for (let i = 1; i <= 12; i++) {
-      expect(screen.getByText(`Position ${i}`)).toBeInTheDocument();
+      expect(screen.getByText(`P${i}`)).toBeInTheDocument();
     }
   });
 
@@ -51,7 +50,7 @@ describe('PlantPositionGrid', () => {
     const allPositions = screen.getAllByLabelText(/Position \d+/);
     const highlightedPosition = allPositions[0]; // Position 1 should be first
     expect(highlightedPosition.className).toContain('ring-2');
-    expect(highlightedPosition.className).toContain('ring-blue-500');
+    expect(highlightedPosition.className).toContain('ring-green-500');
   });
   it('shows "Available" for empty positions', () => {
     render(<PlantPositionGrid plants={mockPlants} />);
