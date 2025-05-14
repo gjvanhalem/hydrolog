@@ -12,13 +12,34 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [systemName, setSystemName] = useState('');
+  const [rows, setRows] = useState('');
+  const [positionsPerRow, setPositionsPerRow] = useState<string[]>(['']); // Keep as string[] for input handling
   
   const { signup, getRedirectUrl, clearRedirectUrl } = useAuth();
   const router = useRouter();
+  const handleAddRow = () => {
+    setPositionsPerRow([...positionsPerRow, '']);
+  };
 
+  const handleRemoveRow = (index: number) => {
+    setPositionsPerRow(positionsPerRow.filter((_, i) => i !== index));
+  };
+
+  const handleRowChange = (index: number, value: string) => {
+    const updatedRows = [...positionsPerRow];
+    updatedRows[index] = value; // Keep as string for input handling
+    setPositionsPerRow(updatedRows);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate system details
+    if (!systemName || !rows || positionsPerRow.some(row => !row)) {
+      setError('Please provide all system details');
+      return;
+    }
     
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,8 +82,16 @@ export default function SignupPage() {
     setIsSubmitting(true);
     
     try {
-      const result = await signup(email, password, name || undefined);
-        if (!result.success) {
+      // Convert string position values to numbers
+      const numericPositions = positionsPerRow.map(pos => parseInt(pos, 10));
+      
+      const result = await signup(email, password, name || undefined, {
+        systemName,
+        rows: parseInt(rows, 10),
+        positionsPerRow: numericPositions,
+      });
+
+      if (!result.success) {
         setError(result.error || 'Signup failed');
       } else {
         // Success - redirect to saved URL or home
@@ -146,6 +175,68 @@ export default function SignupPage() {
               placeholder="••••••••"
               required
             />
+          </div>
+
+          <div>
+            <label htmlFor="systemName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              System Name
+            </label>
+            <input
+              id="systemName"
+              type="text"
+              value={systemName}
+              onChange={(e) => setSystemName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+              placeholder="My Hydroponic System"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="rows" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Rows
+            </label>
+            <input
+              id="rows"
+              type="number"
+              value={rows}
+              onChange={(e) => setRows(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+              placeholder="Number of Rows"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="positionsPerRow" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Positions Per Row
+            </label>
+            {positionsPerRow.map((row, index) => (
+              <div key={index} className="flex items-center space-x-2 mb-2">
+                <input
+                  type="number"
+                  value={row}
+                  onChange={(e) => handleRowChange(index, e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                  placeholder={`Positions for Row ${index + 1}`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRow(index)}
+                  className="px-2 py-1 bg-red-500 text-white rounded-md"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddRow}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md"
+            >
+              Add Row
+            </button>
           </div>
           
           <button

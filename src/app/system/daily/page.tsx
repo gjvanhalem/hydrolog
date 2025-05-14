@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import LogEntry from './LogEntry';
 import { redirect } from 'next/navigation';
 import { getCurrentUserId } from '@/lib/auth';
+import { SystemLog } from '@/types/system-log';
 
 export const metadata: Metadata = {
   title: 'System Log History | HydroLog',
@@ -15,9 +16,8 @@ export default async function DailyLogPage() {
   if (!userId) {
     redirect('/login');
     return null;
-  }
-
-  // Get all logs in descending order by date, filtered by userId
+  }  // Get all logs in descending order by date, filtered by userId
+  // Using raw query result mapping to avoid Prisma type issues with the new fields
   const allLogs = await prisma.systemLog.findMany({
     where: {
       // Only fetch logs for the current user
@@ -62,8 +62,7 @@ export default async function DailyLogPage() {
               <div className="bg-green-50 dark:bg-green-900/30 px-6 py-3 rounded-t-lg">
                 <h2 className="text-lg font-semibold text-green-800 dark:text-green-300">{date}</h2>
               </div>
-              <div className="p-6 divide-y divide-gray-200 dark:divide-gray-700">
-                {logs.map((log) => (
+              <div className="p-6 divide-y divide-gray-200 dark:divide-gray-700">                {logs.map((log) => (
                   <LogEntry
                     key={log.id}
                     id={log.id}
@@ -72,6 +71,7 @@ export default async function DailyLogPage() {
                     unit={log.unit}
                     note={log.note}
                     logDate={log.logDate}
+                    systemName={log.systemName}
                   />
                 ))}
               </div>

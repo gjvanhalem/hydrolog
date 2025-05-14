@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const measurementTypes = [
@@ -21,6 +21,11 @@ interface FormData {
   logDate: string;
 }
 
+interface SystemInfo {
+  id: number;
+  name: string;
+}
+
 export default function SystemLogForm() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
@@ -30,9 +35,35 @@ export default function SystemLogForm() {
     note: '',
     logDate: new Date().toISOString().split('T')[0] // Current date in YYYY-MM-DD format
   });
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+    // Fetch the user's system information
+  useEffect(() => {
+    async function fetchSystemInfo() {
+      try {
+        const response = await fetch('/api/system');
+        if (response.ok) {
+          const data = await response.json();
+          if (data) {
+            setSystemInfo(data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch system info:', err);
+      }
+    }
+    
+    fetchSystemInfo();
+  }, []);
+  
+  // Handle redirect when submission is successful
+  useEffect(() => {
+    if (shouldRedirect) {
+      window.location.href = '/system/daily';
+    }
+  }, [shouldRedirect]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -47,24 +78,18 @@ export default function SystemLogForm() {
         body: JSON.stringify({
           ...formData,
           value: Number(formData.value),
-          logDate: formData.logDate
+          logDate: formData.logDate,
+          systemId: systemInfo?.id || null
         }),
-      });
-
-      if (!response.ok) {
+      });      if (!response.ok) {
         throw new Error('Failed to submit measurement');
       }
-
-      // Reset form
-      setFormData({
-        type: 'ph_measurement',
-        value: '',
-        unit: 'pH',
-        note: '',
-        logDate: new Date().toISOString().split('T')[0]
-      });
-      router.refresh();
-      router.push('/system/daily');    } catch (error) {
+      
+      console.log('Measurement submitted successfully, triggering redirect...');
+      
+      // Trigger the redirect via state change
+      setShouldRedirect(true);
+    } catch (error) {
       // Set the error message for the user to see
       setError(error instanceof Error ? error.message : 'Failed to submit measurement');
     } finally {

@@ -10,7 +10,8 @@ const mockPlants = [
     status: 'growing',
     startDate: new Date('2025-05-01'),
     createdAt: new Date('2025-05-01'),
-    updatedAt: new Date('2025-05-01')
+    updatedAt: new Date('2025-05-01'),
+    userId: 101
   },
   {
     id: 2,
@@ -20,7 +21,8 @@ const mockPlants = [
     status: 'seedling',
     startDate: new Date('2025-05-05'),
     createdAt: new Date('2025-05-05'),
-    updatedAt: new Date('2025-05-05')
+    updatedAt: new Date('2025-05-05'),
+    userId: 102
   }
 ];
 

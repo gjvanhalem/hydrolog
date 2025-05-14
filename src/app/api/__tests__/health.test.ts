@@ -47,7 +47,10 @@ describe('Health API', () => {
     jest.clearAllMocks();
     // Setup environment variables
     process.env.npm_package_version = '0.1.0';
-    process.env.NODE_ENV = 'test';
+    jest.spyOn(process, 'env', 'get').mockReturnValue({
+      ...process.env,
+      NODE_ENV: 'test',
+    });
   });
 
   afterAll(() => {

@@ -91,7 +91,8 @@ export async function getAuthenticatedUser() {
       select: {
         id: true,
         email: true,
-        name: true
+        name: true,
+        systemId: true // Include systemId in the user object
       }
     });
     

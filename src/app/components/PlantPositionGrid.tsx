@@ -10,32 +10,21 @@ interface Position {
 
 interface PlantPositionGridProps {
   plants: Plant[];
+  positionsPerRow: number[]; // Add positionsPerRow prop
   highlightPosition?: number | null;
   className?: string;
 }
 
-export default function PlantPositionGrid({ plants, highlightPosition, className = '' }: PlantPositionGridProps) {  // Filter out removed plants and create positions array
+export default function PlantPositionGrid({ plants, positionsPerRow, highlightPosition, className = '' }: PlantPositionGridProps) {
   const activePlants = plants.filter(p => p.status !== 'removed');
-  // Active plants are filtered for display
-  
-  // Define the positions based on the 4-5-3 layout
-  const rows = [
-    // First row: 4 positions
-    Array.from({ length: 4 }, (_, i) => ({
-      position: i + 1,
-      plant: activePlants.find(p => p.position === i + 1)
-    })),
-    // Second row: 5 positions
-    Array.from({ length: 5 }, (_, i) => ({
-      position: i + 5,
-      plant: activePlants.find(p => p.position === i + 5)
-    })),
-    // Third row: 3 positions
-    Array.from({ length: 3 }, (_, i) => ({
-      position: i + 10,
-      plant: activePlants.find(p => p.position === i + 10)
+
+  // Generate rows dynamically based on positionsPerRow
+  const rows = positionsPerRow.map((positions, rowIndex) =>
+    Array.from({ length: positions }, (_, i) => ({
+      position: i + 1 + positionsPerRow.slice(0, rowIndex).reduce((a, b) => a + b, 0),
+      plant: activePlants.find(p => p.position === i + 1 + positionsPerRow.slice(0, rowIndex).reduce((a, b) => a + b, 0))
     }))
-  ];
+  );
 
   const PositionCell = ({ position, plant }: Position) => (
     <div
@@ -77,26 +66,13 @@ export default function PlantPositionGrid({ plants, highlightPosition, className
 
   return (
     <div className={`flex flex-col gap-8 ${className}`}>
-      {/* Row 1: 4 positions */}
-      <div className="flex justify-center gap-4">
-        {rows[0].map((pos) => (
-          <PositionCell key={pos.position} {...pos} />
-        ))}
-      </div>
-      
-      {/* Row 2: 5 positions */}
-      <div className="flex justify-center gap-4">
-        {rows[1].map((pos) => (
-          <PositionCell key={pos.position} {...pos} />
-        ))}
-      </div>
-      
-      {/* Row 3: 3 positions */}
-      <div className="flex justify-center gap-4">
-        {rows[2].map((pos) => (
-          <PositionCell key={pos.position} {...pos} />
-        ))}
-      </div>
+      {rows.map((row, rowIndex) => (
+        <div key={rowIndex} className="flex justify-center gap-4">
+          {row.map((pos) => (
+            <PositionCell key={pos.position} {...pos} />
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

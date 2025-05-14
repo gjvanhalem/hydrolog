@@ -12,8 +12,12 @@ type User = {
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;  signup: (
+    email: string,
+    password: string,
+    name?: string,
+    systemDetails?: { systemName: string; rows: number; positionsPerRow: number[] }
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   saveRedirectUrl: (url: string) => void;
   getRedirectUrl: () => string | null;
@@ -99,24 +103,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Login error', error);
       return { success: false, error: 'Network error. Please try again.' };
-    }
-  };
+    }  };
 
   // Signup function
-  const signup = async (email: string, password: string, name?: string) => {
+  const signup = async (
+    email: string,
+    password: string,
+    name?: string,
+    systemDetails?: { systemName: string; rows: number; positionsPerRow: number[] }
+  ) => {
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          ...systemDetails,
+        }),
       });
-      
+
       const data = await res.json();
-      
+
       if (!res.ok) {
         return { success: false, error: data.error || 'Signup failed' };
       }
-      
+
       setUser(data.user);
       return { success: true };
     } catch (error) {

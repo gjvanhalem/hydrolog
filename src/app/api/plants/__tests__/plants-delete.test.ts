@@ -40,7 +40,12 @@ describe('Plants Delete API', () => {
       id: 1,
       name: 'Test Plant',
       status: 'removed',
-      position: null
+      position: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      type: 'Test Type',
+      startDate: new Date(),
+      userId: 1
     });
     
     // Import the route handler after mocks are set up

@@ -5,6 +5,27 @@ import PlantLogForm from './log-form';
 import PlantPositionGrid from '@/app/components/PlantPositionGrid';
 import PlantHeader from './PlantHeader';
 
+// Helper function to safely get positions per row
+function getPositionsPerRow(system: any): number[] {
+  if (!system || !system.positionsPerRow) {
+    return [4]; // Default fallback
+  }
+  
+  try {
+    // If it's already an array, return it
+    if (Array.isArray(system.positionsPerRow)) {
+      return system.positionsPerRow;
+    }
+    
+    // If it's a JSON string, try to parse it
+    const parsed = JSON.parse(system.positionsPerRow.toString());
+    return Array.isArray(parsed) ? parsed : [4];
+  } catch (error) {
+    console.error('Error parsing positionsPerRow:', error);
+    return [4]; // Fallback to default on error
+  }
+}
+
 interface PlantPageProps {
   params: {
     id: string;
@@ -33,12 +54,11 @@ export async function generateMetadata({ params }: PlantPageProps): Promise<Meta
 }
 
 export default async function PlantPage({ params }: PlantPageProps) {
-  const plantId = parseInt(params.id);
+  const { id } = await params; // Await params before accessing its properties
+  const plantId = parseInt(id);
   if (isNaN(plantId)) {
     notFound();
-  }
-
-  const [plant, activePlants] = await Promise.all([
+  }  const [plant, activePlants] = await Promise.all([
     prisma.plant.findUnique({
       where: { id: plantId },
       include: {
@@ -53,9 +73,16 @@ export default async function PlantPage({ params }: PlantPageProps) {
             note: true,
             photo: true
           }
+        },
+        system: {
+          select: {
+            id: true,
+            name: true,
+            positionsPerRow: true
+          }
         }
       }
-    }).catch(() => null),
+    }).catch(() => null),    
     prisma.plant.findMany({
       where: {
         status: { not: 'removed' }
@@ -63,6 +90,7 @@ export default async function PlantPage({ params }: PlantPageProps) {
       select: {
         id: true,
         name: true,
+        systemId: true,
         createdAt: true,
         updatedAt: true,
         type: true,
@@ -73,10 +101,14 @@ export default async function PlantPage({ params }: PlantPageProps) {
       }
     })
   ]);
-
   if (!plant) {
     notFound();
-  }  // Extract and format plant data for client-side rendering
+  }
+  
+  // Filter active plants to only include those from the same system
+  const plantsInSameSystem = activePlants.filter(p => p.systemId === plant.systemId);
+  
+  // Extract and format plant data for client-side rendering
   const formattedPlant = {
     id: plant.id,
     name: plant.name,
@@ -105,12 +137,18 @@ export default async function PlantPage({ params }: PlantPageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Position Grid */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6">
-          <h2 className="text-xl font-semibold mb-4 dark:text-white">System Position</h2>
-          <PlantPositionGrid 
-            plants={activePlants} 
-            highlightPosition={formattedPlant.position}
-          />
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6">          <h2 className="text-xl font-semibold mb-4 dark:text-white">System Position</h2>          {plant.system ? (
+            <>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">System: {plant.system.name}</p>
+              <PlantPositionGrid 
+                plants={plantsInSameSystem} 
+                positionsPerRow={getPositionsPerRow(plant.system)} 
+                highlightPosition={formattedPlant.position}
+              />
+            </>
+          ) : (
+            <p className="text-gray-600 dark:text-gray-400">No system information available</p>
+          )}
         </section>
 
         {/* Log Form */}

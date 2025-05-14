@@ -3,27 +3,48 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function NewPlantPage() {
-  const router = useRouter();
+export default function NewPlantPage() {  const router = useRouter();
   const searchParams = useSearchParams();
   const [initialPosition, setInitialPosition] = useState(1);
+  const [maxPosition, setMaxPosition] = useState(12); // Default fallback value
   const [formData, setFormData] = useState({
     name: '',
     type: '',
     position: 1, // Default value that will be updated
   });
   
-  // Use effect to update position when searchParams changes
+  // First, fetch the system configuration to get max positionconst [maxPosition, setMaxPosition] = useState(12); // Default fallback value
+  
+  // First, fetch the system configuration to get max position
+  useEffect(() => {
+    const fetchSystemConfig = async () => {
+      try {
+        const response = await fetch('/api/system');
+        if (response.ok) {
+          const data = await response.json();
+          // Calculate total positions from positionsPerRow
+          const totalPositions = data.positionsPerRow.reduce((sum: number, positions: number) => sum + positions, 0);
+          setMaxPosition(totalPositions);
+        }
+      } catch (error) {
+        console.error('Error fetching system config:', error);
+      }
+    };
+    
+    fetchSystemConfig();
+  }, []);
+  
+  // Then, handle position from URL params
   useEffect(() => {
     const positionParam = searchParams?.get('position');
     if (positionParam) {
       const position = parseInt(positionParam);
-      if (!isNaN(position) && position >= 1 && position <= 12) {
+      if (!isNaN(position) && position >= 1 && position <= maxPosition) {
         setFormData(prev => ({ ...prev, position }));
         setInitialPosition(position);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, maxPosition]);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -97,17 +118,16 @@ export default function NewPlantPage() {
         </div>        <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Position {initialPosition > 0 && <span className="text-green-600 dark:text-green-400">(Pre-selected: P{initialPosition})</span>}
-          </label>
-          <input
+          </label>          <input
             type="number"
             required
             min="1"
-            max="12"
+            max={maxPosition}
             value={formData.position}
             onChange={(e) => setFormData(prev => ({ ...prev, position: parseInt(e.target.value) }))}
             className={`w-full p-2 border rounded ${initialPosition > 0 ? 'border-green-500 dark:border-green-400' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400`}
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Enter the position number (1-12)</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Enter the position number (1-{maxPosition})</p>
         </div>
 
         <div className="flex justify-end space-x-4">

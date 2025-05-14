@@ -36,9 +36,33 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    const { name, type, position } = await req.json();
+      const { name, type, position } = await req.json();
     logger.info('Creating new plant', { name, type, position, userId });
+    
+    // Get the user's system to validate position against system layout
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { system: true }
+    });
+
+    if (!user?.system) {
+      return NextResponse.json(
+        { error: 'No system associated with this user' },
+        { status: 400 }
+      );
+    }    // Calculate total positions in system
+    const positionsArray = Array.isArray(user.system.positionsPerRow) 
+      ? user.system.positionsPerRow as number[]
+      : [];
+    const totalPositions = positionsArray.reduce((sum, positions) => sum + positions, 0);
+    
+    // Validate that position is within bounds
+    if (position < 1 || position > totalPositions) {
+      return NextResponse.json(
+        { error: `Position must be between 1 and ${totalPositions}` },
+        { status: 400 }
+      );
+    }
     
     // Check if position is already occupied
     const existingPlant = await prisma.plant.findFirst({
@@ -55,16 +79,15 @@ export async function POST(req: NextRequest) {
         { error: `Position ${position} is already occupied by plant "${existingPlant.name}"` }, 
         { status: 409 } // Conflict status code
       );
-    }
-
-    const plant = await prisma.plant.create({
+    }    const plant = await prisma.plant.create({
       data: {
         name,
         type,
         position,
         status: 'planted',
         startDate: new Date(),
-        userId
+        userId,
+        systemId: user.system.id // Include the system ID
       }
     });
     logger.info('Plant created successfully', { id: plant.id });
