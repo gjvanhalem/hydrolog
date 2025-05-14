@@ -19,13 +19,12 @@ export default function LogEntry({ id, type, value, unit, note, logDate }: LogEn
           </span>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Value: {value} {unit}
-          </p>
-          {note && (
+          </p>          {note && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{note}</p>
           )}
         </div>
         <time className="text-sm text-gray-600 dark:text-gray-400">
-          {new Date(logDate).toLocaleString()}
+          {new Date(logDate).toLocaleTimeString()}
         </time>
       </div>
     </div>

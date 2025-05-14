@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import SystemLogForm from '@/app/system/record/log-form';
+import ProtectedRoute from '@/app/components/ProtectedRoute';
 
 export const metadata: Metadata = {
   title: 'Record System Measurement | HydroLog',
@@ -8,11 +9,13 @@ export const metadata: Metadata = {
 
 export default function SystemLogPage() {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 dark:text-white">Record System Measurement</h1>
-      <div className="max-w-2xl mx-auto">
-        <SystemLogForm />
+    <ProtectedRoute>
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6 dark:text-white">Record System Measurement</h1>
+        <div className="max-w-2xl mx-auto">
+          <SystemLogForm />
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

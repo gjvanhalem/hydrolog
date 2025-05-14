@@ -3,11 +3,32 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client" // Corrected output path
 }
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String?
+  password      String    // Hashed password
+  plants        Plant[]
+  systemLogs    SystemLog[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
 }
 
 model Plant {
@@ -18,6 +39,8 @@ model Plant {
   status      String    // e.g., "germination", "fruiting", "harvesting", "removed"
   startDate   DateTime
   logs        PlantLog[]
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -25,7 +48,7 @@ model Plant {
 model PlantLog {
   id          Int       @id @default(autoincrement())
   plantId     Int
-  plant       Plant     @relation(fields: [plantId], references: [id])
+  plant       Plant     @relation(fields: [plantId], references: [id], onDelete: Cascade)
   note        String
   photo       String?   // URL or path to photo
   status      String
@@ -41,4 +64,6 @@ model SystemLog {
   note        String?
   logDate     DateTime  @default(now())  // The date of the log entry
   createdAt   DateTime  @default(now())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

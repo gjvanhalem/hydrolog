@@ -13,8 +13,10 @@ interface PlantPageProps {
 
 // Generate metadata for the plant page
 export async function generateMetadata({ params }: PlantPageProps): Promise<Metadata> {
+  const { id } = await params; // Await params before accessing its properties
+
   const plant = await prisma.plant.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     select: { name: true, type: true }
   });
 
@@ -53,21 +55,23 @@ export default async function PlantPage({ params }: PlantPageProps) {
           }
         }
       }
-    }).catch(() => null),    prisma.plant.findMany({
+    }).catch(() => null),
+    prisma.plant.findMany({
       where: {
         status: { not: 'removed' }
       },
       select: {
         id: true,
         name: true,
+        createdAt: true,
+        updatedAt: true,
         type: true,
         position: true,
         status: true,
         startDate: true,
-        createdAt: true,
-        updatedAt: true
+        userId: true // Include userId to match the expected type
       }
-    }).catch(() => [])
+    })
   ]);
 
   if (!plant) {

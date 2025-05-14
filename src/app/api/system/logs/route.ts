@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUserId } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
   context: { params: {} }
 ) {
   try {
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    logger.info('Fetching system logs for user', { userId });
     const systemLogs = await prisma.systemLog.findMany({
+      where: {
+        userId
+      },
       orderBy: {
         createdAt: 'desc'
       },
@@ -31,14 +43,23 @@ export async function POST(
   context: { params: {} }
 ) {
   try {
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const { type, value, unit, note, logDate } = (await req.json()) as SystemLogInput;
+    logger.info('Creating system log', { type, userId });
+    
     const log = await prisma.systemLog.create({
       data: {
         type,
         value,
         unit,
         note,
-        logDate: logDate ? new Date(logDate) : new Date()
+        logDate: logDate ? new Date(logDate) : new Date(),
+        userId
       }
     });
     return NextResponse.json(log);

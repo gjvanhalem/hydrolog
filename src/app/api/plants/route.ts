@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { getCurrentUserId } from '@/lib/auth';
 
 export async function GET() {
   try {
-    logger.info('Fetching all plants');
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    logger.info('Fetching all plants for user', { userId });
     const plants = await prisma.plant.findMany({
+      where: {
+        userId,
+        status: { not: 'removed' }
+      },
       orderBy: {
         position: 'asc'
       }
@@ -20,15 +31,40 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const { name, type, position } = await req.json();
-    logger.info('Creating new plant', { name, type, position });
+    logger.info('Creating new plant', { name, type, position, userId });
+    
+    // Check if position is already occupied
+    const existingPlant = await prisma.plant.findFirst({
+      where: { 
+        userId,
+        position: position,
+        status: { not: 'removed' }  // Only consider active plants
+      }
+    });
+
+    if (existingPlant) {
+      logger.warn('Position already occupied', { position, existingPlantId: existingPlant.id });
+      return NextResponse.json(
+        { error: `Position ${position} is already occupied by plant "${existingPlant.name}"` }, 
+        { status: 409 } // Conflict status code
+      );
+    }
+
     const plant = await prisma.plant.create({
       data: {
         name,
         type,
         position,
         status: 'planted',
-        startDate: new Date()
+        startDate: new Date(),
+        userId
       }
     });
     logger.info('Plant created successfully', { id: plant.id });
