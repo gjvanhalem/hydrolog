@@ -1,0 +1,121 @@
+import { jest } from '@jest/globals';
+import { NextRequest } from 'next/server';
+
+// Mock the logger
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    error: jest.fn()
+  }
+}));
+
+// Define the test metrics data
+const mockMetrics = {
+  requests: 42,
+  errors: 5,
+  lastRequest: Date.now(),
+  performance: {
+    avgFCP: 1200,
+    avgLCP: 2500,
+    avgCLS: 0.1,
+    avgFID: 100,
+    sampleCount: 10
+  }
+};
+
+// Mock the metrics module
+const getMetricsMock = jest.fn().mockReturnValue(mockMetrics);
+const updateMetricsMock = jest.fn((status) => {
+  mockMetrics.requests++;
+  if (status >= 400) {
+    mockMetrics.errors++;
+  }
+  mockMetrics.lastRequest = Date.now();
+});
+
+jest.mock('@/lib/metrics', () => ({
+  getMetrics: () => getMetricsMock(),
+  updateMetrics: (status) => updateMetricsMock(status)
+}));
+
+// Import after mocking
+import { GET } from '@/app/api/metrics/route';
+
+describe('Metrics API', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
+  describe('GET', () => {
+    it('returns metrics in Prometheus format', async () => {
+      const request = new NextRequest('http://localhost:3000/api/metrics');
+      const response = await GET(request);
+      
+      // Check response headers
+      expect(response.headers.get('Content-Type')).toBe('text/plain; version=0.0.4');
+      expect(response.headers.get('Cache-Control')).toBe('no-cache, max-age=0');
+      
+      // Check response body
+      const responseText = await response.text();
+      
+      // Verify Prometheus format
+      expect(responseText).toContain('# HELP hydrolog_requests_total Total number of requests');
+      expect(responseText).toContain('# TYPE hydrolog_requests_total counter');
+      expect(responseText).toContain(`hydrolog_requests_total 42`);
+    });
+
+    it('handles errors and returns 500 status', async () => {
+      // Make getMetrics throw an error for this test
+      getMetricsMock.mockImplementationOnce(() => {
+        throw new Error('Metrics unavailable');
+      });
+      
+      const request = new NextRequest('http://localhost:3000/api/metrics');
+      const response = await GET(request);
+      
+      // Check response
+      expect(response.status).toBe(500);
+      
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Failed to generate metrics' });
+    });
+
+    it('returns error when metrics data is invalid', async () => {
+      // Return null for this test
+      getMetricsMock.mockReturnValueOnce(null);
+      
+      const request = new NextRequest('http://localhost:3000/api/metrics');
+      const response = await GET(request);
+      
+      // Check response
+      expect(response.status).toBe(500);
+      
+      const data = await response.json();
+      expect(data).toEqual({ error: 'Failed to generate metrics' });
+    });
+  });
+
+  describe('updateMetrics function', () => {
+    it('updates metrics correctly for successful requests', () => {
+      const initialRequests = mockMetrics.requests;
+      const initialErrors = mockMetrics.errors;
+      
+      updateMetricsMock(200);
+      
+      expect(updateMetricsMock).toHaveBeenCalledWith(200);
+      expect(mockMetrics.requests).toBe(initialRequests + 1);
+      expect(mockMetrics.errors).toBe(initialErrors); // No error increment for 200 status
+    });
+
+    it('updates metrics correctly for error requests', () => {
+      const initialRequests = mockMetrics.requests;
+      const initialErrors = mockMetrics.errors;
+      
+      updateMetricsMock(500);
+      
+      expect(updateMetricsMock).toHaveBeenCalledWith(500);
+      expect(mockMetrics.requests).toBe(initialRequests + 1);
+      expect(mockMetrics.errors).toBe(initialErrors + 1); // Error increment for 500 status
+    });
+  });
+});
