@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
+import { getAuthenticatedUserWithSystems } from '@/lib/auth-with-systems';
 
 export async function GET() {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserWithSystems();
     
     if (!user) {
       return NextResponse.json({ user: null }, { status: 401 });

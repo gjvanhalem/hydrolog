@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { logout } from '@/lib/auth';
+import { logout } from '@/lib/auth-with-systems';
 import { logger } from '@/lib/logger'; // Import the logger instance
 
 export async function POST() {

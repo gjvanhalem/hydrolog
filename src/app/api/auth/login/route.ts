@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
-import { verifyPassword, createSession } from '@/lib/auth';
+import { verifyPassword, createSession } from '@/lib/auth-with-systems';
 import { logger } from '@/lib/logger';
 import { authRateLimiter } from '@/lib/auth-rate-limiter';
 
@@ -38,10 +38,16 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    
-    // Find the user
+      // Find the user with their systems
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      include: {
+        systems: {
+          include: {
+            system: true
+          }
+        }
+      }
     });
     
     if (!user) {
@@ -77,6 +83,10 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60, // 7 days
       sameSite: 'strict'
+    });    // Get the user's systems
+    const userSystems = await prisma.userSystem.findMany({
+      where: { userId: user.id },
+      include: { system: true }
     });
     
     return NextResponse.json({
@@ -84,7 +94,8 @@ export async function POST(req: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        systems: userSystems
       }
     });
   } catch (error) {

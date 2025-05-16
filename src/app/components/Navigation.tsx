@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from './AuthContext';
+import SystemSelector from './SystemSelector';
 
 export default function Navigation() {
   const [darkMode, setDarkMode] = useState(false);
@@ -38,6 +39,7 @@ export default function Navigation() {
               <div className="text-sm">
                 {user ? (
                   <div className="flex items-center space-x-4">
+                    <SystemSelector />
                     <span>Welcome, {user.name || user.email.split('@')[0]}</span>
                     <button 
                       onClick={() => logout()}
@@ -78,10 +80,8 @@ export default function Navigation() {
       <nav className="bg-white dark:bg-gray-800 shadow-lg">
         <div className="container mx-auto">          <ul className="flex justify-center space-x-6 py-4">            <li><Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Dashboard</Link></li>
             <li><Link href="/plants" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Plants</Link></li>
-            <li><Link href="/system/daily" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Log History</Link></li>
-            <li><Link href="/reports" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Reports</Link></li>
-            <li><Link href="/plants/history" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Plant History</Link></li>
-            <li><Link href="/system" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">System</Link></li>
+            <li><Link href="/reports" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Reports & History</Link></li>
+            <li><Link href="/system/manage" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Manage Systems</Link></li>
           </ul>
         </div>
       </nav>

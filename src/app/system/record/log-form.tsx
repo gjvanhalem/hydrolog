@@ -57,13 +57,13 @@ export default function SystemLogForm() {
     
     fetchSystemInfo();
   }, []);
-  
   // Handle redirect when submission is successful
   useEffect(() => {
     if (shouldRedirect) {
-      window.location.href = '/system/daily';
+      // Go directly to the reports page with log-history tab
+      window.location.href = '/reports?tab=log-history';
     }
-  }, [shouldRedirect]);
+  }, [shouldRedirect, router]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Navigation from './components/Navigation';
-import { AuthProvider } from './components/AuthContext';
+import ClientLayout from './components/ClientLayout';
 
 export const metadata: Metadata = {
   title: 'HydroLog',
@@ -19,12 +18,9 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body>
-        <AuthProvider>
-          <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
-            <Navigation />
-            {children}
-          </div>
-        </AuthProvider>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUserId } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/auth-with-systems';
+import { getActiveUserSystem } from '@/lib/system-utils';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
@@ -17,13 +18,17 @@ export async function GET() {
         { status: 401 }
       );
     }
+      // Get the active system for this user
+    const activeUserSystem = await getActiveUserSystem(userId);
+    const systemId = activeUserSystem?.systemId;
     
-    logger.info('Fetching plant history for user', { userId });
+    logger.info('Fetching plant history for user', { userId, systemId });
     
     const plants = await prisma.plant.findMany({
       where: {
         userId,
-        status: 'removed'
+        status: 'removed',
+        ...(systemId ? { systemId } : {})
       },
       include: {
         logs: {

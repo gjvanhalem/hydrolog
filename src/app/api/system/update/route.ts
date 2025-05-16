@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Update the system layout
     const updatedSystem = await prisma.system.update({
       where: { id: user.systemId },
-      data: { positionsPerRow: positionsPerRow as Prisma.JsonValue }, // Treat as JSON value
+      data: { positionsPerRow: positionsPerRow as Prisma.InputJsonValue }, // Treat as InputJsonValue
     });
 
     return NextResponse.json({ success: true, system: updatedSystem });

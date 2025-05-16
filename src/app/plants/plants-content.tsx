@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import PlantPositionGrid from '@/app/components/PlantPositionGrid';
 import RemoveAllPlantsButton from '@/app/components/RemoveAllPlantsButton';
+import { useAuth } from '@/app/components/AuthContext';
 
 type Plant = {
   id: number;
@@ -27,10 +28,12 @@ export default function PlantsContent() {
   const [positionsPerRow, setPositionsPerRow] = useState<number[]>([]); // Add state for positionsPerRow
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const { getActiveSystem } = useAuth();
+  const activeSystem = getActiveSystem();
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const [plantsResponse, systemResponse] = await Promise.all([
           fetch('/api/plants'),
           fetch('/api/system') // Fetch system data
@@ -53,7 +56,7 @@ export default function PlantsContent() {
     };
 
     fetchData();
-  }, []);
+  }, [activeSystem]); // Add activeSystem as a dependency to trigger refresh when it changes
 
   if (loading) {
     return (
@@ -77,9 +80,20 @@ export default function PlantsContent() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold dark:text-white">Plants</h1>
+    <div className="p-6">      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold dark:text-white">
+          Plants
+          {activeSystem && (
+            <span className="text-lg font-normal text-gray-500 dark:text-gray-400 ml-2">
+              ({activeSystem.system.name})
+            </span>
+          )}
+          {loading && (
+            <span className="ml-3 inline-block align-middle">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-500"></div>
+            </span>
+          )}
+        </h1>
         <div className="flex gap-4">
           {plants.length > 0 && <RemoveAllPlantsButton />}
           <Link href="/plants/new">
@@ -88,26 +102,38 @@ export default function PlantsContent() {
             </button>
           </Link>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      </div>      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6">
-          <h2 className="text-xl font-semibold mb-4 dark:text-white">System Layout</h2>
-          <PlantPositionGrid plants={plants} positionsPerRow={positionsPerRow} /> {/* Pass positionsPerRow */}
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">
+            System Layout
+            {activeSystem && (
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                ({activeSystem.system.name})
+              </span>
+            )}
+          </h2>
+          {!activeSystem ? (
+            <p className="text-gray-600 dark:text-gray-400">No active system selected.</p>
+          ) : (
+            <PlantPositionGrid plants={plants} positionsPerRow={positionsPerRow} /> /* Pass positionsPerRow */
+          )}
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6">
-          <h2 className="text-xl font-semibold mb-4 dark:text-white">Quick Stats</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-green-700 dark:text-green-400">{plants.length}</div>
-              <div className="text-sm text-green-600 dark:text-green-500">Active Plants</div>
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">Quick Stats</h2>          {!activeSystem ? (
+            <p className="text-gray-600 dark:text-gray-400">No active system selected.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-green-700 dark:text-green-400">{plants.length}</div>
+                <div className="text-sm text-green-600 dark:text-green-500">Active Plants</div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{positionsPerRow.reduce((a, b) => a + b, 0) - plants.length}</div>
+                <div className="text-sm text-blue-600 dark:text-blue-500">Available Slots</div>
+              </div>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{positionsPerRow.reduce((a, b) => a + b, 0) - plants.length}</div>
-              <div className="text-sm text-blue-600 dark:text-blue-500">Available Slots</div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -139,10 +165,13 @@ export default function PlantsContent() {
               </button>
             </Link>
           </div>
-        ))}
-        {plants.length === 0 && (
+        ))}        {!activeSystem ? (
           <div className="lg:col-span-3 text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
-            <p className="text-gray-600 dark:text-gray-400">No plants yet. Add your first plant to get started!</p>
+            <p className="text-gray-600 dark:text-gray-400">No active system selected. Please select a system to view plants.</p>
+          </div>
+        ) : plants.length === 0 && (
+          <div className="lg:col-span-3 text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
+            <p className="text-gray-600 dark:text-gray-400">No plants yet in {activeSystem.system.name}. Add your first plant to get started!</p>
           </div>
         )}
       </div>

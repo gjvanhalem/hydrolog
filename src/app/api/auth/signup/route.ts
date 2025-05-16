@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, createSession } from '@/lib/auth';
+import { hashPassword, createSession } from '@/lib/auth-with-systems';
 import { logger } from '@/lib/logger';
 import { authRateLimiter } from '@/lib/auth-rate-limiter';
 import { Prisma } from '@prisma/client';
@@ -32,33 +32,47 @@ export async function POST(req: NextRequest) {
     // Ensure positionsPerRow contains numbers, not strings
     const numericPositionsPerRow = Array.isArray(positionsPerRow) 
       ? positionsPerRow.map(pos => typeof pos === 'string' ? parseInt(pos, 10) : pos) 
-      : positionsPerRow;
-
-    // Hash password and create user with system
+      : positionsPerRow;    // Hash password and create user with system
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
+    // Create the user first
+    const newUser = await prisma.user.create({
       data: {
         email,
         name: name || email.split('@')[0],
         password: hashedPassword,
-        system: {
-          create: {
-            name: systemName,
-            rows,
-            positionsPerRow: numericPositionsPerRow as Prisma.JsonValue, // Explicitly cast to Prisma.JsonValue
-          }
-        }
-      },
-      include: {
-        system: true // Explicitly include the system relation in the response
       }
     });
-
-    logger.info('User registered successfully', { userId: user.id, email });
+    
+    // Create the system
+    const newSystem = await prisma.system.create({
+      data: {
+        name: systemName,
+        rows,
+        positionsPerRow: numericPositionsPerRow as Prisma.InputJsonValue, // Explicitly cast to Prisma.InputJsonValue
+      }
+    });
+    
+    // Create the user-system relationship with isActive=true
+    await prisma.userSystem.create({
+      data: {
+        userId: newUser.id,
+        systemId: newSystem.id,
+        isActive: true
+      }
+    });
+      // Get the user with systems included
+    const userWithSystems = await prisma.user.findUnique({
+      where: { id: newUser.id },
+      include: {
+        systems: {
+          include: { system: true }
+        }
+      }
+    });    logger.info('User registered successfully', { userId: newUser.id, email });
 
     // Create session and generate token
-    const token = await createSession(user.id);
+    const token = await createSession(newUser.id);
 
     // Set cookie
     const cookieStore = await cookies();
@@ -70,16 +84,18 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60, // 7 days
       sameSite: 'strict'
-    });
+    });    // Ensure we have a user with systems
+    if (!userWithSystems) {
+      logger.error('User created but could not retrieve with systems', { userId: newUser.id });
+      return NextResponse.json(
+        { error: 'User created but error occurred retrieving user data' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        system: user.system // Ensure system is included in the response
-      }
+      user: userWithSystems
     });
   } catch (error) {
     logger.error('Signup error', { error });

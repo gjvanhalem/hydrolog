@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: '3.8'
 services:
   hydrolog:
     build: .
@@ -8,7 +8,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/hydro.db
       - LOG_LEVEL=info
-      # Add any other environment variables here
+      - JWT_SECRET=${JWT_SECRET:-your-secret-jwt-key-must-be-at-least-32-bytes-long-for-hs256}
     volumes:
       - ./data:/app/data
       - ./public/uploads:/app/public/uploads
@@ -19,12 +19,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # Add healthcheck    healthcheck:
-      test: |
-        CMD-SHELL
-        wget -q --spider http://localhost:3000/api/health || exit 1;
-        wget -q --spider http://localhost:3000/api/metrics || exit 1;
-        [ -f /app/data/hydro.db ] || exit 1;
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health", "||", "exit", "1"]
       interval: 30s
       timeout: 10s
       retries: 3

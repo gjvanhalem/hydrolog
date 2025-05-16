@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUserId } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/auth-with-systems';
 import { logger } from '@/lib/logger';
 
 export async function DELETE(

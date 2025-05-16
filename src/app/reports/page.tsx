@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import PageWrapper from './page-wrapper';
 
 export const metadata: Metadata = {
-  title: 'System Reports | HydroLog',
-  description: 'View and analyze system measurements and plant growth data over time'
+  title: 'System Reports & History | HydroLog',
+  description: 'View system measurements, trends, and plant growth history over time'
 };
 
 export default function ReportsPage() {

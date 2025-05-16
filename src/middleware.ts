@@ -5,6 +5,8 @@ import * as jose from 'jose';
 import { logger } from '@/lib/logger';
 import { updateMetrics } from '@/lib/metrics';
 import { rateLimiter } from '@/lib/rate-limiter';
+// Import AuthTokenPayload type from auth.ts even though we now use auth-with-systems
+// This is just a type import so it won't affect execution
 import { AuthTokenPayload } from '@/lib/auth';
 
 // JWT secret - In production, use an environment variable
@@ -15,7 +17,7 @@ const JWT_SECRET_BYTES = new TextEncoder().encode(JWT_SECRET_STRING);
 const protectedRoutes = [
   '/api/plants',
   '/api/system/logs',
-  '/api/plants/history',
+  '/api/plants/history', // Kept for backward compatibility
   '/api/plants/remove-all',
   '/api/upload'
 ];
@@ -38,11 +40,10 @@ const authRoutes = [
 // This is used for logging and monitoring in the middleware
 const clientProtectedRoutes = [
   '/plants',
-  '/plants/history',
   '/plants/new',
   '/system/record',
-  '/system/daily',
-  '/reports'
+  '/system/daily', // Redirects to reports page with log-history tab
+  '/reports' // Now includes the plant history and log history functionality
 ];
 
 export async function middleware(request: NextRequest) {
@@ -50,11 +51,17 @@ export async function middleware(request: NextRequest) {
   const rateLimitResponse = await rateLimiter(request);  // Return early if rate limit is exceeded
   if (rateLimitResponse) return rateLimitResponse;
 
+  // Handle legacy route redirects
+  const path = request.nextUrl.pathname;
+  if (path === '/system/daily') {
+    logger.info('Redirecting legacy route', { from: path, to: '/reports?tab=log-history' });
+    return NextResponse.redirect(new URL('/reports?tab=log-history', request.url));
+  }
+
   // Generate request ID for tracing
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
     // Check if route needs authentication
-  const path = request.nextUrl.pathname;
   const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
   const isPublicRoute = publicRoutes.some(route => path === route);
   const isAuthRoute = authRoutes.some(route => path === route);
@@ -186,9 +193,6 @@ export const config = {
     '/api/:path*',
     
     // Client routes (excluding static assets)
-    '/((?!_next/static|_next/image|favicon.ico|.*.svg).*)',
-    
-    // Specifically include the plants history page
-    '/plants/history'
+    '/((?!_next/static|_next/image|favicon.ico|.*.svg).*)'
   ]
 }

@@ -11,7 +11,8 @@ const mockPlants = [
     startDate: new Date('2025-05-01'),
     createdAt: new Date('2025-05-01'),
     updatedAt: new Date('2025-05-01'),
-    userId: 101
+    userId: 101,
+    systemId: 201
   },
   {
     id: 2,
@@ -22,7 +23,8 @@ const mockPlants = [
     startDate: new Date('2025-05-05'),
     createdAt: new Date('2025-05-05'),
     updatedAt: new Date('2025-05-05'),
-    userId: 102
+    userId: 102,
+    systemId: 202
   }
 ];
 
@@ -31,7 +33,7 @@ describe('PlantPositionGrid', () => {
     jest.clearAllMocks();
   });
   it('renders all 12 positions', () => {
-    render(<PlantPositionGrid plants={[]} />);
+    render(<PlantPositionGrid plants={[]} positionsPerRow={[3, 3, 3, 3]} />);
     
     // Check that all position numbers are rendered with the P prefix
     for (let i = 1; i <= 12; i++) {
@@ -40,13 +42,13 @@ describe('PlantPositionGrid', () => {
   });
 
   it('displays plants in correct positions', () => {
-    render(<PlantPositionGrid plants={mockPlants} />);
+    render(<PlantPositionGrid plants={mockPlants} positionsPerRow={[3, 3, 3, 3]} />);
     
     // Check that plant names are displayed in correct positions
     expect(screen.getByText('Test Plant 1')).toBeInTheDocument();
     expect(screen.getByText('Test Plant 2')).toBeInTheDocument();
   });  it('highlights the specified position', () => {
-    render(<PlantPositionGrid plants={mockPlants} highlightPosition={1} />);
+    render(<PlantPositionGrid plants={mockPlants} positionsPerRow={[3, 3, 3, 3]} highlightPosition={1} />);
     
     // Since we know all plant containers are direct children of the grid, find by aria-label
     const allPositions = screen.getAllByLabelText(/Position \d+/);
@@ -55,7 +57,7 @@ describe('PlantPositionGrid', () => {
     expect(highlightedPosition.className).toContain('ring-green-500');
   });
   it('shows "Available" for empty positions', () => {
-    render(<PlantPositionGrid plants={mockPlants} />);
+    render(<PlantPositionGrid plants={mockPlants} positionsPerRow={[3, 3, 3, 3]} />);
     
     const availableSlots = screen.getAllByRole('link', { name: /Available/i });
     expect(availableSlots).toHaveLength(10); // 12 total - 2 occupied
@@ -67,7 +69,7 @@ describe('PlantPositionGrid', () => {
   });
 
   it('links to new plant form with correct position', () => {
-    render(<PlantPositionGrid plants={mockPlants} />);
+    render(<PlantPositionGrid plants={mockPlants} positionsPerRow={[3, 3, 3, 3]} />);
     
     // Check that empty positions link to new plant form with position parameter
     const emptyPositionLink = screen.getAllByText('Available')[0].closest('a');

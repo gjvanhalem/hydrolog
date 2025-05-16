@@ -23,18 +23,18 @@ type Plant = {
 };
 
 export default function HomeContent() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, getActiveSystem } = useAuth();
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
+  const activeSystem = getActiveSystem();
   
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
-      try {
-        // Fetch system logs
-        const logsResponse = await fetch('/api/system/logs');
+        try {
+        // Fetch system logs - filtered by active system only
+        const logsResponse = await fetch('/api/system/logs?activeOnly=true');
         
         if (logsResponse.ok) {
           const logsData = await logsResponse.json();
@@ -69,7 +69,7 @@ export default function HomeContent() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, activeSystem]); // Add activeSystem as a dependency to trigger data refresh when it changes
   
   // If not authenticated, show welcome screen
   if (!isLoading && !user) {
@@ -134,14 +134,28 @@ export default function HomeContent() {
   
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-8 dark:text-white">Hydroponics Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 dark:text-white">
+        Hydroponics Dashboard
+        {loading && (
+          <span className="ml-3 inline-block align-middle">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-500"></div>
+          </span>
+        )}
+      </h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* System Status Card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">        {/* System Status Card */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
-          <h2 className="text-xl font-semibold mb-4 dark:text-white">System Status</h2>
-          <div className="space-y-4">
-            {systemLogs.length > 0 ? (
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">
+            System Status
+            {activeSystem && (
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                ({activeSystem.system.name})
+              </span>
+            )}
+          </h2>          <div className="space-y-4">
+            {!activeSystem ? (
+              <p className="text-gray-600 dark:text-gray-400">No active system selected.</p>
+            ) : systemLogs.length > 0 ? (
               systemLogs.map(log => (
                 <div key={log.id} className="dark:text-gray-300">
                   <div className="flex justify-between items-center">

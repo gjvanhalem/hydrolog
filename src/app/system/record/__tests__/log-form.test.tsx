@@ -109,11 +109,10 @@ describe('SystemLogForm', () => {
         logDate: today
       }),
     });
-    
-    // Check router actions
+      // Check router actions
     await waitFor(() => {
       expect(mockRouter.refresh).toHaveBeenCalled();
-      expect(mockRouter.push).toHaveBeenCalledWith('/system/daily');
+      expect(mockRouter.push).toHaveBeenCalledWith('/reports?tab=log-history');
     });
   });
 

@@ -1,35 +1,36 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getAuthenticatedUser } from '@/lib/auth';
+﻿import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth-with-systems";
+import { getActiveUserSystem } from "@/lib/system-utils";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
-    const user = await getAuthenticatedUser();
+    const userId = await getCurrentUserId();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch the system details for the authenticated user
-    const system = await prisma.system.findFirst({
-      where: {
-        users: {
-          some: {
-            id: user.id, // Use the authenticated user's ID
-          },
-        },
-      },
-    });    if (!system) {
-      return NextResponse.json({ error: 'System not found' }, { status: 404 });
+    // Fetch the active system for the current user
+    const activeUserSystem = await getActiveUserSystem(userId);
+    
+    if (!activeUserSystem) {
+      return NextResponse.json({ error: "No active system found" }, { status: 404 });
     }
+
+    const system = activeUserSystem.system;
 
     return NextResponse.json({
       id: system.id,
       name: system.name,
       positionsPerRow: system.positionsPerRow,
+      rows: system.rows
     });
   } catch (error) {
-    console.error('Error fetching system:', error);
-    return NextResponse.json({ error: 'Failed to fetch system' }, { status: 500 });
+    logger.error("Failed to fetch system", { 
+      error: error instanceof Error ? { message: error.message, stack: error.stack } : String(error) 
+    });
+    return NextResponse.json({ error: "Failed to fetch system" }, { status: 500 });
   }
 }

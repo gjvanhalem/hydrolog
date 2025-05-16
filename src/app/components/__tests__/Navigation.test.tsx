@@ -20,20 +20,16 @@ describe('Navigation', () => {
   });
 
   it('renders navigation links', () => {
-    render(<Navigation />);
-    
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    render(<Navigation />);      expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Plants')).toBeInTheDocument();
-    expect(screen.getByText('Daily Log')).toBeInTheDocument();
-    expect(screen.getByText('Reports')).toBeInTheDocument();
-    expect(screen.getByText('History')).toBeInTheDocument();
+    expect(screen.getByText('Reports & History')).toBeInTheDocument();
+    expect(screen.getByText('System')).toBeInTheDocument();
     
     // Check that links are correct
     expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/');
     expect(screen.getByText('Plants').closest('a')).toHaveAttribute('href', '/plants');
-    expect(screen.getByText('Daily Log').closest('a')).toHaveAttribute('href', '/system/daily');
-    expect(screen.getByText('Reports').closest('a')).toHaveAttribute('href', '/reports');
-    expect(screen.getByText('History').closest('a')).toHaveAttribute('href', '/plants/history');
+    expect(screen.getByText('Reports & History').closest('a')).toHaveAttribute('href', '/reports');
+    expect(screen.getByText('System').closest('a')).toHaveAttribute('href', '/system');
   });
 
   it('renders the app title', () => {

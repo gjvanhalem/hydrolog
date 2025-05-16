@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUserId } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/auth-with-systems';
+import { getActiveUserSystem } from '@/lib/system-utils';
 import { logger } from '@/lib/logger';
 
 export async function GET(
@@ -14,17 +15,29 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    // Get the active system ID (optional filter)
+    const searchParams = request.nextUrl.searchParams;
+    const activeOnly = searchParams.get('activeOnly') === 'true';
+    
+    let whereClause: any = { userId };
+    
+    if (activeOnly) {
+      const activeUserSystem = await getActiveUserSystem(userId);
+      if (activeUserSystem) {
+        whereClause.systemId = activeUserSystem.systemId;
+      }
+    }
+    
     logger.info('Fetching system logs for user', { userId });
     const systemLogs = await prisma.systemLog.findMany({
-      where: {
-        userId
-      },
+      where: whereClause,
       orderBy: {
         createdAt: 'desc'
       },
       include: {
         system: {
           select: {
+            id: true,
             name: true
           }
         }
@@ -57,22 +70,16 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const { type, value, unit, note, logDate } = (await req.json()) as SystemLogInput;
-    logger.info('Creating system log', { type, userId });
+    const { type, value, unit, note, logDate } = (await req.json()) as SystemLogInput;    logger.info('Creating system log', { type, userId });
     
-    // Get the user's system info
-    const userSystem = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        systemId: true,
-        system: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    });
+    // Get the user's active system info
+    const activeUserSystem = await getActiveUserSystem(userId);
+    if (!activeUserSystem) {
+      logger.warn('No active system found when creating system log', { userId });
+      return NextResponse.json({ error: 'No active system found' }, { status: 404 });
+    }
+    
+    const system = activeUserSystem.system;
     
     const log = await prisma.systemLog.create({
       data: {
@@ -82,8 +89,8 @@ export async function POST(
         note,
         logDate: logDate ? new Date(logDate) : new Date(),
         userId,
-        systemId: userSystem?.system?.id || null,
-        systemName: userSystem?.system?.name || null
+        systemId: system.id,
+        systemName: system.name
       }
     });
     return NextResponse.json(log);

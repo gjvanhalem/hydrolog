@@ -3,16 +3,32 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // Define types
+type SystemType = {
+  id: number;
+  name: string;
+  rows?: number;
+  positionsPerRow?: number[] | string;
+};
+
+type UserSystemType = {
+  id: number;
+  systemId: number;
+  isActive: boolean;
+  system: SystemType;
+};
+
 type User = {
   id: number;
   email: string;
   name?: string;
+  systems?: UserSystemType[];
 };
 
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;  signup: (
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (
     email: string,
     password: string,
     name?: string,
@@ -22,6 +38,10 @@ type AuthContextType = {
   saveRedirectUrl: (url: string) => void;
   getRedirectUrl: () => string | null;
   clearRedirectUrl: () => void;
+  addSystem: (systemData: { name: string; rows: number; positionsPerRow: number[] }) => Promise<{ success: boolean; error?: string }>;
+  removeSystem: (systemId: number) => Promise<{ success: boolean; error?: string }>;
+  switchSystem: (systemId: number) => Promise<{ success: boolean; error?: string }>;
+  getActiveSystem: () => UserSystemType | undefined;
 };
 
 // Create the AuthContext
@@ -166,6 +186,125 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     savedRedirectUrl = null;
   };
 
+  // Add a new system for the current user
+  const addSystem = async (systemData: { name: string; rows: number; positionsPerRow: number[] }) => {
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+    
+    try {
+      const res = await fetch('/api/system/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(systemData),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to add system' };
+      }
+      
+      // Update user state with the new system
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        // Refresh user data if full user object wasn't returned
+        const userRes = await fetch('/api/auth/user');
+        const userData = await userRes.json();
+        if (userRes.ok && userData.user) {
+          setUser(userData.user);
+        }
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Add system error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Remove a system for the current user
+  const removeSystem = async (systemId: number) => {
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+    
+    try {
+      const res = await fetch(`/api/system/${systemId}/remove`, {
+        method: 'DELETE',
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to remove system' };
+      }
+      
+      // Update user state with the updated systems
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        // Refresh user data if full user object wasn't returned
+        const userRes = await fetch('/api/auth/user');
+        const userData = await userRes.json();
+        if (userRes.ok && userData.user) {
+          setUser(userData.user);
+        }
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Remove system error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Switch to a different system
+  const switchSystem = async (systemId: number) => {
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+    
+    try {
+      const res = await fetch(`/api/system/${systemId}/activate`, {
+        method: 'POST',
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to switch system' };
+      }
+      
+      // Update user state with the updated systems
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        // Refresh user data if full user object wasn't returned
+        const userRes = await fetch('/api/auth/user');
+        const userData = await userRes.json();
+        if (userRes.ok && userData.user) {
+          setUser(userData.user);
+        }
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Switch system error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Get the active system for the current user
+  const getActiveSystem = (): UserSystemType | undefined => {
+    if (!user || !user.systems || user.systems.length === 0) {
+      return undefined;
+    }
+    
+    return user.systems.find(system => system.isActive);
+  };
+
   const value = {
     user,
     isLoading,
@@ -175,6 +314,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveRedirectUrl,
     getRedirectUrl,
     clearRedirectUrl,
+    addSystem,
+    removeSystem,
+    switchSystem,
+    getActiveSystem,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
