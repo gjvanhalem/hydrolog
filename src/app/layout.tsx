@@ -5,6 +5,7 @@ import ClientLayout from './components/ClientLayout';
 export const metadata: Metadata = {
   title: 'HydroLog',
   description: 'Monitor and manage your hydroponic garden',
+  // Next.js automatically uses favicon.ico from the app directory
 };
 
 export default function RootLayout({

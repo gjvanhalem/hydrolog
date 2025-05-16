@@ -13,8 +13,8 @@ RUN npm config set fetch-retry-mintimeout 20000 && \
 # Install dependencies with retry mechanism
 RUN for i in $(seq 1 5); do npm ci && break || sleep 15; done
 COPY . .
-# Create the data directory structure
-RUN mkdir -p data logs
+# Create logs directory
+RUN mkdir -p logs
 # Generate Prisma Client
 RUN npx prisma generate
 # Build the application
@@ -23,9 +23,8 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:/app/data/dev.db
-# Install curl and production dependencies
-RUN apk --no-cache add curl
+# Install curl and PostgreSQL client for connectivity checks
+RUN apk --no-cache add curl postgresql-client
 # Configure npm for better network resilience
 RUN npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
@@ -41,8 +40,8 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/generate-jwt-secret.js ./
 
-# Create data and logs directories
-RUN mkdir -p data logs
+# Create logs directory
+RUN mkdir -p logs
 
 # Copy entry point script
 COPY docker-entrypoint.sh /usr/local/bin/

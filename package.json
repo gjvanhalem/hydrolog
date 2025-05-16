@@ -16,7 +16,15 @@
     "docker:logs": "docker-compose logs -f",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "prepare:prod": "npm run prisma:generate && npm run build"
+    "prisma:studio": "prisma studio",
+    "prisma:reset": "prisma migrate reset --force",
+    "prepare:prod": "npm run prisma:generate && npm run build",
+    "db:backup": "sh ./scripts/backup-db.sh",
+    "db:backup:win": "powershell -ExecutionPolicy Bypass -File .\\scripts\\backup-db.ps1",
+    "db:setup": "sh ./scripts/setup-db.sh",
+    "db:setup:win": "powershell -ExecutionPolicy Bypass -File .\\scripts\\setup-db.ps1",
+    "db:diagnostics": "sh ./scripts/db-diagnostics.sh",
+    "db:diagnostics:win": "powershell -ExecutionPolicy Bypass -File .\\scripts\\db-diagnostics.ps1"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",

@@ -57,7 +57,7 @@ HydroLog can be run either locally on your machine or via Docker containers. Cho
    # Generate Prisma client
    npx prisma generate
 
-   # Create database and run migrations
+   # Create PostgreSQL database and run migrations
    npx prisma migrate dev
    ```
 
@@ -67,7 +67,7 @@ HydroLog can be run either locally on your machine or via Docker containers. Cho
    Copy-Item ".env.example" -Destination ".env.local"
    
    # Edit .env.local with your settings
-   # (Especially DATABASE_URL=file:./data/dev.db)
+   # Update DATABASE_URL for your PostgreSQL connection
    ```
 
 5. **Generate a JWT secret** (for authentication)
@@ -141,7 +141,10 @@ HydroLog supports Docker-based deployment for production environments. Follow th
    ```bash
    cp .env.example .env.production
    ```
-   Edit `.env.production` with your production settings.
+   Edit `.env.production` with your production settings, making sure to set:
+   ```
+   DATABASE_URL=postgresql://postgres:hydrolog_password@postgres:5432/hydrolog?schema=public
+   ```
 
 3. Build and start the containers:
    ```bash
@@ -160,18 +163,16 @@ The application will be available at `http://your-server:3000`.
 
 ### Database Management
 
-The SQLite database is persisted in a Docker volume. Regular backups are recommended:
+The PostgreSQL database is persisted in a Docker volume. Regular backups are recommended:
 
 1. Backup the database:
    ```bash
-   docker exec hydrolog tar czf /app/backup.tar.gz /app/data
-   docker cp hydrolog:/app/backup.tar.gz ./backup.tar.gz
+   docker exec -it postgres pg_dump -U postgres -d hydrolog > backup.sql
    ```
 
 2. Restore from backup:
    ```bash
-   docker cp backup.tar.gz hydrolog:/app/
-   docker exec hydrolog tar xzf /app/backup.tar.gz
+   docker exec -it postgres psql -U postgres -d hydrolog < backup.sql
    ```
 
 ### Health Monitoring
@@ -200,33 +201,95 @@ For additional deployment options, check out the [Next.js deployment documentati
 
 ### Environment Variables
 
-- `DATABASE_URL`: SQLite database location (default: `file:/app/data/dev.db`)
+- `DATABASE_URL`: PostgreSQL database connection string (default for production: `postgresql://postgres:hydrolog_password@postgres:5432/hydrolog?schema=public`)
 - `JWT_SECRET`: Secret key for authentication tokens
 - `LOG_LEVEL`: Logging detail level (default: `info`)
 - `UPLOAD_DIR`: Directory for storing uploaded images
 
-### Database Management
+### PostgreSQL Setup Guide
 
-The SQLite database is stored in the `data/` directory. Regular backups are recommended:
+HydroLog uses PostgreSQL for database storage. Here's how to set it up:
 
-#### With Docker:
-```powershell
-# Backup
-docker exec hydrolog tar czf /app/backup.tar.gz /app/data
-docker cp hydrolog:/app/backup.tar.gz ./backup.tar.gz
+#### Installing PostgreSQL
 
-# Restore
-docker cp backup.tar.gz hydrolog:/app/
-docker exec hydrolog tar xzf /app/backup.tar.gz
+**Windows:**
+1. Download and install from [PostgreSQL Downloads](https://www.postgresql.org/download/windows/)
+2. During installation, note the password you set for the 'postgres' user
+3. Add PostgreSQL bin directory to your PATH (typically `C:\Program Files\PostgreSQL\15\bin`)
+
+**macOS:**
+```bash
+# Using Homebrew
+brew install postgresql
+brew services start postgresql
 ```
 
-#### Without Docker:
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo service postgresql start
+```
+
+#### Setting Up PostgreSQL for HydroLog
+
+We've created scripts to automate PostgreSQL setup:
+
+**Windows:**
+```powershell
+# Set up PostgreSQL for HydroLog
+npm run db:setup:win
+```
+
+**Linux/macOS:**
+```bash
+# Set up PostgreSQL for HydroLog
+npm run db:setup
+```
+
+These scripts will:
+1. Check if PostgreSQL is installed and running
+2. Create a 'hydrolog' database if it doesn't exist
+3. Update your .env.local file with the PostgreSQL connection string
+4. Run Prisma migrations
+
+#### Advanced: Manual PostgreSQL Setup
+
+If you prefer to configure PostgreSQL manually:
+
+1. Create a database:
+```sql
+CREATE DATABASE hydrolog;
+```
+
+2. Update your .env.local file:
+```
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/hydrolog?schema=public
+```
+
+3. Run Prisma migrations:
+```bash
+npx prisma migrate dev
+```
+
+#### Database Backup
+
+##### With Docker:
 ```powershell
 # Backup
-Compress-Archive -Path "data/*" -DestinationPath "hydrolog-backup.zip"
+docker exec -it postgres pg_dump -U postgres -d hydrolog > backup_hydrolog.sql
 
 # Restore
-Expand-Archive -Path "hydrolog-backup.zip" -DestinationPath "data/" -Force
+docker exec -it postgres psql -U postgres -d hydrolog < backup_hydrolog.sql
+```
+
+##### Without Docker:
+```powershell
+# Backup
+pg_dump -h localhost -U postgres -d hydrolog > backup_hydrolog.sql
+
+# Restore
+psql -h localhost -U postgres -d hydrolog < backup_hydrolog.sql
 ```
 
 ## 📊 Monitoring & Maintenance
@@ -237,11 +300,34 @@ The application includes a health check endpoint at `/api/health` that returns t
 ### Logging
 Logs are written to the `logs/` directory and can be configured via the `LOG_LEVEL` environment variable.
 
+### Database Maintenance
+Regular database maintenance tasks are recommended for optimal PostgreSQL performance:
+
+```bash
+# Inside the PostgreSQL container
+docker exec -it postgres psql -U postgres -d hydrolog -c "VACUUM ANALYZE;"
+```
+
+### Monitoring PostgreSQL
+You can monitor PostgreSQL performance using standard tools:
+
+```bash
+# Check PostgreSQL status
+docker exec -it postgres pg_isready
+
+# View PostgreSQL logs
+docker exec -it postgres tail -f /var/log/postgresql/postgresql-15-main.log
+
+# Monitor active connections
+docker exec -it postgres psql -U postgres -d hydrolog -c "SELECT * FROM pg_stat_activity;"
+```
+
 ### Security Considerations
 1. The application runs with security headers enabled
 2. File uploads are restricted to images only
 3. All API routes are protected against common web vulnerabilities
-4. Database should be regularly backed up
+4. PostgreSQL is configured with appropriate user permissions
+5. Database credentials are stored in environment variables, not in code
 
 ## 🤝 Contributing
 
