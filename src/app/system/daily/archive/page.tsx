@@ -9,5 +9,4 @@ export const metadata: Metadata = {
 export default async function DailyLogPage() {
   // Redirect to the combined reports page with log history tab selected
   redirect('/reports?tab=log-history');
-  );
 }

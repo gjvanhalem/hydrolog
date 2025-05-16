@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-type RouteContext = {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
 export async function GET(
   request: NextRequest,
-  { params }: RouteContext
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   try {
-    const logs = await prisma.plantLog.findMany({      where: {
+    const logs = await prisma.plantLog.findMany({
+      where: {
         plantId: parseInt(params.id)
       },
       orderBy: {
@@ -26,11 +23,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: RouteContext
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   try {
-    const { status, note, photo, logDate } = await request.json();
-    const log = await prisma.plantLog.create({
+    const { status, note, photo, logDate } = await request.json();const log = await prisma.plantLog.create({
       data: {
         plantId: parseInt(params.id),
         status,

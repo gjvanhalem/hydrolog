@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import '../app/globals.css';
 import { PlantLog, SystemLog } from '../types';
-import Layout from '../app/layout';
 
 const HistoryPage: React.FC = () => {
   const [plantLogs, setPlantLogs] = useState<PlantLog[]>([]);
@@ -19,9 +18,8 @@ const HistoryPage: React.FC = () => {
       .then((response) => response.json())
       .then((data) => setSystemLogs(data));
   }, []);
-
   return (
-    <Layout>
+    <div className="container mx-auto">
       <div className="p-4">
         <h1 className="text-2xl font-bold">History</h1>
         <p className="mt-4">View the history of plant and system logs below:</p>
@@ -29,7 +27,7 @@ const HistoryPage: React.FC = () => {
           {/* Add your history content here */}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

@@ -3,8 +3,7 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
 export async function POST(
-  request: NextRequest,
-  context: { params: {} }
+  request: NextRequest
 ) {
   try {
     const formData = await request.formData();

@@ -5,16 +5,15 @@ import { logger } from '@/lib/logger';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   try {
     const userId = await getCurrentUserId();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    const id = parseInt(params.id);
+    }    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }

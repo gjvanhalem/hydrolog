@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import '../app/globals.css';
-import Layout from '../app/layout';
 import { Plant, SystemLog } from '../types';
 
 const Dashboard: React.FC = () => {
@@ -37,9 +36,8 @@ const Dashboard: React.FC = () => {
       notes: 'System running smoothly.',
     },
   ];
-
   return (
-    <Layout>
+    <div className="container mx-auto">
       <div className="p-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="mt-4">Welcome to the dashboard. Here is an overview of your plants and system logs.</p>
@@ -47,7 +45,7 @@ const Dashboard: React.FC = () => {
           {/* Add your dashboard content here */}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

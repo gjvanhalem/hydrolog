@@ -23,6 +23,7 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NODE_ENV=production
+ENV DATABASE_URL=file:/app/data/dev.db
 # Install curl and production dependencies
 RUN apk --no-cache add curl
 # Configure npm for better network resilience
@@ -38,6 +39,10 @@ COPY --from=builder /app/prisma ./prisma
 # Copy necessary files for Prisma and Next.js
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/generate-jwt-secret.js ./
+
+# Create data and logs directories
+RUN mkdir -p data logs
 
 # Copy entry point script
 COPY docker-entrypoint.sh /usr/local/bin/

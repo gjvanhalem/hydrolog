@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  swcMinify: true,
-  experimental: {
+  swcMinify: true,  experimental: {
     // Enable modern features
-    serverActions: true,
+    serverActions: {
+      // Use the default body size limit and allowed origins
+      allowedOrigins: ["*"],
+    },
   },
   async headers() {
     return [

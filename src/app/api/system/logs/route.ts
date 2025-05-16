@@ -5,8 +5,7 @@ import { getActiveUserSystem } from '@/lib/system-utils';
 import { logger } from '@/lib/logger';
 
 export async function GET(
-  request: NextRequest,
-  context: { params: {} }
+  request: NextRequest
 ) {
   try {
     const userId = await getCurrentUserId();
@@ -60,8 +59,7 @@ type SystemLogInput = {
 };
 
 export async function POST(
-  req: NextRequest,
-  context: { params: {} }
+  req: NextRequest
 ) {
   try {
     const userId = await getCurrentUserId();

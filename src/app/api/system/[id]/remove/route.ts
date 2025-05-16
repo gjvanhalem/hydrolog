@@ -9,8 +9,9 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   try {
     const userId = await getCurrentUserId();
     

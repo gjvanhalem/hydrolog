@@ -27,9 +27,9 @@ function getPositionsPerRow(system: any): number[] {
 }
 
 interface PlantPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // Generate metadata for the plant page
