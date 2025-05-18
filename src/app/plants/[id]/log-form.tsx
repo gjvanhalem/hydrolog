@@ -57,11 +57,9 @@ export default function PlantLogForm({ plantId }: { plantId: number }) {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6">
-      <div className="space-y-4">
+  };  return (
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6 h-full flex flex-col">
+      <div className="space-y-4 flex-grow">
         <div>
           <label htmlFor="log-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Log Date
@@ -96,9 +94,8 @@ export default function PlantLogForm({ plantId }: { plantId: number }) {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="note" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Note
+        <div>          <label htmlFor="note" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Note (optional)
           </label>
           <textarea
             id="note"
@@ -106,15 +103,12 @@ export default function PlantLogForm({ plantId }: { plantId: number }) {
             onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             rows={3}
-            required
           />
-        </div>
-
-        <ImageUpload
+        </div>        <ImageUpload
           onUpload={(url: string) => setFormData(prev => ({ ...prev, photo: url }))}
         />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-auto pt-4">
           <button
             type="submit"
             disabled={isSubmitting}

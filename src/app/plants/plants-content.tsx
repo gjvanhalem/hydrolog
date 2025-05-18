@@ -13,10 +13,17 @@ type Plant = {
   position: number | null;
   status: string;
   startDate: Date;
-  systemId: number; // Add systemId field
+  systemId: number;
   userId: number;
   createdAt: Date;
   updatedAt: Date;
+  ph_min: number | null;
+  ph_max: number | null;
+  ec_min: number | null;
+  ec_max: number | null;
+  ppm_min: number | null;
+  ppm_max: number | null;
+  external_id: number | null;
 };
 
 type System = {

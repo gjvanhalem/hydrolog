@@ -30,25 +30,32 @@ model Session {
 }
 
 model Plant {
-  id        Int        @id @default(autoincrement())
-  name      String
-  type      String
-  position  Int?
-  status    String
-  startDate DateTime
-  systemId  Int
-  userId    Int
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  system    System     @relation(fields: [systemId], references: [id], onDelete: Cascade)
-  logs      PlantLog[]
+  id          Int        @id @default(autoincrement())
+  name        String
+  type        String
+  position    Int?
+  status      String
+  startDate   DateTime
+  systemId    Int
+  userId      Int
+  ph_min      Decimal?   @db.Decimal(4, 2)
+  ph_max      Decimal?   @db.Decimal(4, 2)
+  ec_min      Decimal?   @db.Decimal(4, 2)
+  ec_max      Decimal?   @db.Decimal(4, 2)
+  ppm_min     Int?
+  ppm_max     Int?
+  external_id Int?       // Reference to the external database ID
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  system      System     @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  logs        PlantLog[]
 }
 
 model PlantLog {
   id        Int      @id @default(autoincrement())
   plantId   Int
-  note      String
+  note      String?
   photo     String?
   status    String
   logDate   DateTime @default(now())

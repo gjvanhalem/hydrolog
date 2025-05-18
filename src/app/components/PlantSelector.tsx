@@ -1,0 +1,152 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import type { ExternalPlant } from '@/app/api/external/plants/route';
+import { fetchWithRetry } from '@/lib/api-utils';
+import { sessionCache } from '@/lib/local-cache';
+
+interface PlantSelectorProps {
+  onPlantSelect: (plant: ExternalPlant | null) => void;
+  selectedExternalId?: number | null;
+}
+
+export default function PlantSelector({ onPlantSelect, selectedExternalId }: PlantSelectorProps) {
+  const [externalPlants, setExternalPlants] = useState<ExternalPlant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPlant, setSelectedPlant] = useState<ExternalPlant | null>(null);
+
+  useEffect(() => {
+    async function fetchExternalPlants() {
+      try {
+        // Don't refetch if we already have the plants
+        if (externalPlants.length > 0) {
+          // Only update selection if needed
+          if (selectedExternalId) {
+            const matchingPlant = externalPlants.find(plant => plant.id === selectedExternalId);
+            if (matchingPlant && !selectedPlant) {
+              setSelectedPlant(matchingPlant);
+              onPlantSelect(matchingPlant);
+            }
+          }
+          return;
+        }
+        
+        // Check if we have cached plant data
+        const cachedPlants = sessionCache.get<ExternalPlant[]>('externalPlants');
+        if (cachedPlants && cachedPlants.length > 0) {
+          console.log('Using cached plant data');
+          setExternalPlants(cachedPlants);
+          
+          if (selectedExternalId) {
+            const matchingPlant = cachedPlants.find(plant => plant.id === selectedExternalId);
+            if (matchingPlant) {
+              setSelectedPlant(matchingPlant);
+              onPlantSelect(matchingPlant);
+            }
+          }
+          
+          setLoading(false);
+          return;
+        }
+        
+        setLoading(true);
+        const response = await fetchWithRetry('/api/external/plants');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch plants: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setExternalPlants(data);
+        
+        // Cache the plant data for future use (cache for 30 minutes)
+        sessionCache.set('externalPlants', data, 1800);
+        
+        // If a selected external ID is provided, find the matching plant
+        if (selectedExternalId) {
+          const matchingPlant = data.find((plant: ExternalPlant) => plant.id === selectedExternalId);
+          if (matchingPlant) {
+            setSelectedPlant(matchingPlant);
+            onPlantSelect(matchingPlant);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching external plants:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchExternalPlants();
+  }, [selectedExternalId, onPlantSelect, externalPlants, selectedPlant]);
+
+  const handlePlantSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = parseInt(e.target.value);
+    
+    if (selectedId === -1) {
+      // Clear selection
+      setSelectedPlant(null);
+      onPlantSelect(null);
+      return;
+    }
+    
+    const plant = externalPlants.find(p => p.id === selectedId);
+    if (plant) {
+      setSelectedPlant(plant);
+      onPlantSelect(plant);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center p-4">Loading plant database...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-md">
+        Failed to load plant database: {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          First, Select a Plant <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={selectedPlant?.id || -1}
+          onChange={handlePlantSelect}
+          className="w-full p-2 border rounded dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+          required
+        >
+          <option value={-1}>Select a plant from the database</option>
+          {externalPlants.map(plant => (
+            <option key={plant.id} value={plant.id}>
+              {plant.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      {selectedPlant && (
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-4 rounded-md">
+          <h3 className="font-medium text-green-700 dark:text-green-300 mb-2">Selected Plant Parameters</h3>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <div>
+              <span className="font-medium">pH Range:</span> {selectedPlant.ph_min} - {selectedPlant.ph_max}
+            </div>
+            <div>
+              <span className="font-medium">EC Range:</span> {selectedPlant.ec_min} - {selectedPlant.ec_max} mS/cm
+            </div>
+            <div>
+              <span className="font-medium">PPM Range:</span> {selectedPlant.ppm_min} - {selectedPlant.ppm_max} ppm
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserId } from '@/lib/auth-with-systems';
 import { logger } from '@/lib/logger';
@@ -48,5 +48,87 @@ export async function DELETE(
       { error: 'Failed to remove plant from position' },
       { status: 500 }
     );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const params = await context.params;
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const plantId = parseInt(params.id);
+    if (isNaN(plantId)) {
+      return NextResponse.json({ error: 'Invalid plant ID' }, { status: 400 });
+    }
+
+    // Get the updates from the request body
+    const {
+      ph_min,
+      ph_max,
+      ec_min,
+      ec_max,
+      ppm_min,
+      ppm_max
+    } = await req.json();
+
+    // First check if the plant exists and belongs to the user
+    const existingPlant = await prisma.plant.findFirst({
+      where: {
+        id: plantId,
+        userId
+      }
+    });
+
+    if (!existingPlant) {
+      return NextResponse.json({ error: 'Plant not found' }, { status: 404 });
+    }
+
+    logger.info('Updating plant parameters', { plantId, userId });
+
+    // Prepare data with proper type conversions
+    const updateData: any = {};
+
+    // Add optional fields with proper type conversion
+    if (ph_min !== undefined) {
+      updateData.ph_min = ph_min === null ? null : Number(ph_min);
+    }
+
+    if (ph_max !== undefined) {
+      updateData.ph_max = ph_max === null ? null : Number(ph_max);
+    }
+
+    if (ec_min !== undefined) {
+      updateData.ec_min = ec_min === null ? null : Number(ec_min);
+    }
+
+    if (ec_max !== undefined) {
+      updateData.ec_max = ec_max === null ? null : Number(ec_max);
+    }
+
+    if (ppm_min !== undefined) {
+      updateData.ppm_min = ppm_min === null ? null : Number(ppm_min);
+    }
+
+    if (ppm_max !== undefined) {
+      updateData.ppm_max = ppm_max === null ? null : Number(ppm_max);
+    }
+
+    // Update the plant with the new parameters
+    const updatedPlant = await prisma.plant.update({
+      where: { id: plantId },
+      data: updateData
+    });
+
+    logger.info('Plant parameters updated successfully', { plantId });
+    return NextResponse.json(updatedPlant);
+  } catch (error) {
+    logger.error('Failed to update plant parameters', { error });
+    return NextResponse.json({ error: 'Failed to update plant parameters' }, { status: 500 });
   }
 }

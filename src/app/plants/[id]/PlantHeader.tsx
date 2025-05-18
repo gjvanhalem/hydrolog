@@ -43,7 +43,6 @@ export default function PlantHeader({ id, name, type, position, status }: PlantH
       setShowConfirmDialog(false);
     }
   };
-
   return (
     <div className="mb-8">
       <div className="flex justify-between items-start mb-2">
@@ -56,21 +55,6 @@ export default function PlantHeader({ id, name, type, position, status }: PlantH
           {isDeleting ? 'Removing...' : 'Remove Plant'}
         </button>
       </div>
-
-      <dl className="grid grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
-        <div>
-          <dt className="font-medium dark:text-gray-300">Type</dt>
-          <dd>{type}</dd>
-        </div>
-        <div>
-          <dt className="font-medium dark:text-gray-300">Position</dt>
-          <dd>{position}</dd>
-        </div>
-        <div>
-          <dt className="font-medium dark:text-gray-300">Status</dt>
-          <dd>{status}</dd>
-        </div>
-      </dl>
 
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

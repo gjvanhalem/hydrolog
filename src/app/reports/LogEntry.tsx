@@ -11,7 +11,7 @@ interface LogEntryProps {
 }
 
 export default function LogEntry({ id, type, value, unit, note, logDate, systemName }: LogEntryProps) {
-  const formattedDate = new Date(logDate).toLocaleTimeString();
+  // Removed the time formatting, no longer displaying time
 
   return (
     <div className="py-4">
@@ -32,9 +32,7 @@ export default function LogEntry({ id, type, value, unit, note, logDate, systemN
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{note}</p>
           )}
         </div>
-        <time className="text-sm text-gray-600 dark:text-gray-400">
-          {formattedDate}
-        </time>
+        {/* Time display removed */}
       </div>
     </div>
   );

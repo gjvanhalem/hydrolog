@@ -427,11 +427,10 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
                           <h2 className="text-xl font-semibold dark:text-white">{plant.name}</h2>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {plant.type} • Previously in Position {plant.position || 'Unknown'}
-                          </p>
-                        </div>
+                          </p>                        </div>
                         <div className="text-right text-sm text-gray-600 dark:text-gray-400">
                           <div>Started: {new Date(plant.startDate).toLocaleDateString()}</div>
-                          <div>Removed: {new Date(plant.updatedAt).toLocaleTimeString()}</div>
+                          <div>Removed: {new Date(plant.updatedAt).toLocaleDateString()}</div>
                         </div>
                       </div>
 
@@ -448,10 +447,9 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
                                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     {log.note}
                                   </p>
-                                )}
-                              </div>
+                                )}                              </div>
                               <time className="text-sm text-gray-600 dark:text-gray-400">
-                                {new Date(log.logDate).toLocaleTimeString()}
+                                {new Date(log.logDate).toLocaleDateString()}
                               </time>
                             </div>
                             {log.photo && (

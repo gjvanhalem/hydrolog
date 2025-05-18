@@ -26,16 +26,17 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   const params = await context.params;
-  try {
-    const { status, note, photo, logDate } = await request.json();const log = await prisma.plantLog.create({
+  try {    const { status, note, photo, logDate } = await request.json();
+
+    const log = await prisma.plantLog.create({
       data: {
         plantId: parseInt(params.id),
         status,
-        note,
+        note: note || null, // Handle empty strings by converting to null
         photo,
         logDate: logDate ? new Date(logDate) : new Date()
       }
-    });    // Update the plant's status
+    });// Update the plant's status
     await prisma.plant.update({
       where: {
         id: parseInt(params.id)

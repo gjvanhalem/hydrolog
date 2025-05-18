@@ -20,6 +20,14 @@ type Plant = {
   position: number | null;
   status: string;
   startDate: string;
+  ph_min?: number | null;
+  ph_max?: number | null;
+  ec_min?: number | null;
+  ec_max?: number | null;
+  ppm_min?: number | null;
+  ppm_max?: number | null;
+  external_id?: number | null;
+  hasOutOfRangeParams?: boolean;
 };
 
 export default function HomeContent() {
@@ -48,14 +56,32 @@ export default function HomeContent() {
           });
           
           setSystemLogs(Object.values(logsByType));
-        }
-        
-        // Fetch plants
-        const plantsResponse = await fetch('/api/plants');
-        
-        if (plantsResponse.ok) {
-          const plantsData = await plantsResponse.json();
-          setPlants(plantsData);
+          
+          // Get current measurement values for checking parameters
+          const currentPh = logsByType['ph_measurement'] ? Number(logsByType['ph_measurement'].value) : null;
+          const currentEc = logsByType['ec_measurement'] ? Number(logsByType['ec_measurement'].value) / 1000 : null; // Convert µS/cm to mS/cm
+          const currentPpm = logsByType['tds_measurement'] ? Number(logsByType['tds_measurement'].value) : null;
+          
+          // Fetch plants
+          const plantsResponse = await fetch('/api/plants');
+          
+          if (plantsResponse.ok) {
+            const plantsData = await plantsResponse.json();
+            
+            // Add flag to plants with out-of-range parameters
+            const processedPlants = plantsData.map((plant: Plant) => {
+              const isPhOutOfRange = isParameterOutOfRange(plant.ph_min, plant.ph_max, currentPh);
+              const isEcOutOfRange = isParameterOutOfRange(plant.ec_min, plant.ec_max, currentEc);
+              const isPpmOutOfRange = isParameterOutOfRange(plant.ppm_min, plant.ppm_max, currentPpm);
+              
+              return {
+                ...plant,
+                hasOutOfRangeParams: isPhOutOfRange || isEcOutOfRange || isPpmOutOfRange
+              };
+            });
+            
+            setPlants(processedPlants);
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -70,6 +96,18 @@ export default function HomeContent() {
       setLoading(false);
     }
   }, [user, activeSystem]); // Add activeSystem as a dependency to trigger data refresh when it changes
+  
+  // Function to check if a parameter is out of range
+  const isParameterOutOfRange = (minValue: number | null | undefined, maxValue: number | null | undefined, currentValue: number | null): boolean => {
+    if (currentValue === null) return false;
+    if (!minValue && !maxValue) return false;
+    
+    const min = minValue !== null && minValue !== undefined ? Number(minValue) : Number.MIN_SAFE_INTEGER;
+    const max = maxValue !== null && maxValue !== undefined ? Number(maxValue) : Number.MAX_SAFE_INTEGER;
+    const current = Number(currentValue);
+    
+    return current < min || current > max;
+  };
   
   // If not authenticated, show welcome screen
   if (!isLoading && !user) {
@@ -177,9 +215,7 @@ export default function HomeContent() {
               <p className="text-gray-600 dark:text-gray-400">No measurements recorded yet.</p>
             )}
           </div>
-        </div>
-
-        {/* Active Plants Card */}
+        </div>        {/* Active Plants Card */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
           <h2 className="text-xl font-semibold mb-4 dark:text-white">Active Plants</h2>
           <div className="space-y-3">
@@ -190,11 +226,20 @@ export default function HomeContent() {
                 <Link 
                   key={plant.id} 
                   href={`/plants/${plant.id}`}
-                  className="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  className={`block p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors ${
+                    plant.hasOutOfRangeParams ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : ''
+                  }`}
                 >
                   <div className="flex justify-between items-center dark:text-gray-300">
                     <div>
-                      <span className="font-medium">{plant.name}</span>
+                      <span className={`font-medium ${plant.hasOutOfRangeParams ? 'text-red-600 dark:text-red-400' : ''}`}>
+                        {plant.name}
+                        {plant.hasOutOfRangeParams && (
+                          <span className="ml-2 text-xs text-red-600 dark:text-red-400 font-normal">
+                            (Parameters out of range!)
+                          </span>
+                        )}
+                      </span>
                       <div className="flex items-center mt-1">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Position {plant.position}</span>
                         <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
