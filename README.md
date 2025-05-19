@@ -143,7 +143,8 @@ HydroLog supports Docker-based deployment for production environments. Follow th
    ```
    Edit `.env.production` with your production settings, making sure to set:
    ```
-   DATABASE_URL=postgresql://postgres:hydrolog_password@postgres:5432/hydrolog?schema=public
+   DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/hydrolog?schema=public
+   POSTGRES_PASSWORD=your_secure_password_here
    ```
 
 3. Build and start the containers:
@@ -185,6 +186,17 @@ The application includes a health check endpoint at `/api/health`. Use this to m
 2. File uploads are restricted to images only
 3. All API routes are protected against common web vulnerabilities
 4. Database is stored in a persistent Docker volume
+5. Never commit sensitive information like database passwords to version control
+6. Use environment variables for all sensitive configuration
+7. For production deployment, generate a strong random password for your PostgreSQL database
+
+### Password Management
+
+For secure operations:
+1. Set `POSTGRES_PASSWORD` in your environment or in a non-versioned `.env.production` file
+2. Generate a strong random password (at least 16 characters)
+3. Consider using a secrets management solution for production environments
+4. Avoid hardcoding passwords in scripts or configuration files
 
 ### Troubleshooting
 
@@ -201,7 +213,8 @@ For additional deployment options, check out the [Next.js deployment documentati
 
 ### Environment Variables
 
-- `DATABASE_URL`: PostgreSQL database connection string (default for production: `postgresql://postgres:hydrolog_password@postgres:5432/hydrolog?schema=public`)
+- `DATABASE_URL`: PostgreSQL database connection string (default for production: `postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/hydrolog?schema=public`)
+- `POSTGRES_PASSWORD`: Database password (never commit the actual password to version control)
 - `JWT_SECRET`: Secret key for authentication tokens
 - `LOG_LEVEL`: Logging detail level (default: `info`)
 - `UPLOAD_DIR`: Directory for storing uploaded images
