@@ -6,6 +6,11 @@ import { logger } from './logger';
 // Define log levels properly for TypeScript
 type LogLevel = 'query' | 'info' | 'warn' | 'error';
 
+// Log missing DATABASE_URL for debugging purposes
+if (!process.env.DATABASE_URL) {
+  console.warn('WARNING: DATABASE_URL environment variable is not set');
+}
+
 // PostgreSQL optimization options
 const prismaClientOptions: Prisma.PrismaClientOptions = {
   // Configure connection pooling for PostgreSQL
@@ -13,11 +18,13 @@ const prismaClientOptions: Prisma.PrismaClientOptions = {
   log: process.env.NODE_ENV === 'development' 
     ? ['query', 'error', 'warn'] as LogLevel[]
     : ['error'] as LogLevel[],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
+  ...(process.env.DATABASE_URL ? {
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL
+      },
     },
-  },
+  } : {}),
 };
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };

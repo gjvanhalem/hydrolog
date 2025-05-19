@@ -6,7 +6,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:hydrolog_password@postgres:5432/hydrolog?schema=public
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-hydrolog_password}@postgres:5432/hydrolog?schema=public
+      - EXTERNAL_PLANTS_API_URL=http://plants-api:4000/api/plants
       - LOG_LEVEL=info
       - JWT_SECRET=${JWT_SECRET:-your-secret-jwt-key-must-be-at-least-32-bytes-long-for-hs256}
     volumes:
@@ -33,7 +34,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=hydrolog_password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-hydrolog_password}
       - POSTGRES_DB=hydrolog
     volumes:
       - postgres_data:/var/lib/postgresql/data

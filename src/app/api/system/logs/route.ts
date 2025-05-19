@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUserId } from '@/lib/auth-with-systems';
 import { getActiveUserSystem } from '@/lib/system-utils';
 import { logger } from '@/lib/logger';
+import { toNumber } from '@/lib/decimal-utils';
 
 export async function GET(
   request: NextRequest
@@ -27,8 +28,7 @@ export async function GET(
       }
     }
     
-    logger.info('Fetching system logs for user', { userId });
-    const systemLogs = await prisma.systemLog.findMany({
+    logger.info('Fetching system logs for user', { userId });    const systemLogs = await prisma.systemLog.findMany({
       where: whereClause,
       orderBy: {
         createdAt: 'desc'
@@ -43,7 +43,14 @@ export async function GET(
       },
       take: 50
     });
-    return NextResponse.json(systemLogs);
+    
+    // Convert any Decimal values to JavaScript numbers before returning
+    const safeSystemLogs = systemLogs.map(log => ({
+      ...log,
+      value: toNumber(log.value)
+    }));
+    
+    return NextResponse.json(safeSystemLogs);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch system logs' }, { status: 500 });
   }

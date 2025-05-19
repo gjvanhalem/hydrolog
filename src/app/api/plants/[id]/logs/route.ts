@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { toNumber } from '@/lib/decimal-utils';
 
 export async function GET(
   request: NextRequest,
@@ -15,7 +16,14 @@ export async function GET(
         createdAt: 'desc'
       }
     });
-    return NextResponse.json(logs);
+    
+    // Convert any Decimal values to JavaScript numbers
+    const safeData = logs.map(log => ({
+      ...log,
+      // Add any Decimal fields that need conversion here if needed
+    }));
+    
+    return NextResponse.json(safeData);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch plant logs' }, { status: 500 });
   }

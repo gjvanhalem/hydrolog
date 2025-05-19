@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import PageWrapper from './page-wrapper';
+import ReportsClientWrapper from './client-wrapper';
 
 export const metadata: Metadata = {
   title: 'System Reports & History | HydroLog',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ReportsPage() {
-  return <PageWrapper />;
+  return <ReportsClientWrapper />;
 }

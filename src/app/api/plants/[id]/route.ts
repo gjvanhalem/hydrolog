@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserId } from '@/lib/auth-with-systems';
 import { logger } from '@/lib/logger';
+import { toNumber } from '@/lib/decimal-utils';
+
+// Helper function to safely convert Decimal values to JavaScript numbers
+function convertDecimalValues(obj: any) {
+  if (!obj || typeof obj !== 'object') return obj;
+  
+  const result = { ...obj };
+  
+  // Function to safely convert potential Decimal fields
+  const convertField = (fieldName: string) => {
+    if (fieldName in result && result[fieldName] !== null && result[fieldName] !== undefined) {
+      result[fieldName] = toNumber(result[fieldName]);
+    }
+  };
+  
+  // Convert all potential Decimal fields
+  ['ph_min', 'ph_max', 'ec_min', 'ec_max', 'ppm_min', 'ppm_max', 'external_id'].forEach(convertField);
+  
+  return result;
+}
 
 export async function DELETE(
   request: Request,
@@ -117,16 +137,18 @@ export async function PATCH(
 
     if (ppm_max !== undefined) {
       updateData.ppm_max = ppm_max === null ? null : Number(ppm_max);
-    }
-
-    // Update the plant with the new parameters
+    }    // Update the plant with the new parameters
     const updatedPlant = await prisma.plant.update({
       where: { id: plantId },
       data: updateData
     });
 
     logger.info('Plant parameters updated successfully', { plantId });
-    return NextResponse.json(updatedPlant);
+    
+    // Convert any Decimal values to JavaScript numbers before returning
+    const safeData = convertDecimalValues(updatedPlant);
+    
+    return NextResponse.json(safeData);
   } catch (error) {
     logger.error('Failed to update plant parameters', { error });
     return NextResponse.json({ error: 'Failed to update plant parameters' }, { status: 500 });

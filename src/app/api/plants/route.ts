@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getCurrentUserId } from '@/lib/auth-with-systems';
 import { getActiveUserSystem } from '@/lib/system-utils';
+import { toNumber } from '@/lib/decimal-utils';
 
 // Add revalidation for GET requests
 export const revalidate = 60; // Cache for 60 seconds
@@ -31,7 +32,25 @@ export async function GET() {
       }
     });
     logger.debug('Plants fetched successfully', { count: plants.length, systemId });
-    return NextResponse.json(plants);
+    
+    // Convert any Decimal values to plain JavaScript numbers before returning
+    const safeData = plants.map((plant: any) => {
+      const result = { ...plant };
+      
+      // Function to safely convert potential Decimal fields
+      const convertField = (fieldName: string) => {
+        if (fieldName in plant && plant[fieldName] !== null && plant[fieldName] !== undefined) {
+          result[fieldName] = toNumber(plant[fieldName]);
+        }
+      };
+      
+      // Convert all potential Decimal fields
+      ['ph_min', 'ph_max', 'ec_min', 'ec_max', 'ppm_min', 'ppm_max', 'external_id'].forEach(convertField);
+      
+      return result;
+    });
+    
+    return NextResponse.json(safeData);
   } catch (error) {
     logger.error('Failed to fetch plants', { error });
     return NextResponse.json({ error: 'Failed to fetch plants' }, { status: 500 });

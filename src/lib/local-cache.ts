@@ -7,12 +7,46 @@ interface CacheEntry<T> {
   expiry: number;
 }
 
+// Mock storage for server-side rendering
+class MemoryStorage implements Storage {
+  private items: Record<string, string> = {};
+  readonly length: number = 0;
+  
+  clear(): void {
+    this.items = {};
+  }
+  
+  getItem(key: string): string | null {
+    return this.items[key] || null;
+  }
+  
+  key(index: number): string | null {
+    return Object.keys(this.items)[index] || null;
+  }
+  
+  removeItem(key: string): void {
+    delete this.items[key];
+  }
+  
+  setItem(key: string, value: string): void {
+    this.items[key] = value;
+  }
+}
+
 class LocalCache {
   private storage: Storage;
   
   constructor(useSessionStorage = false) {
-    // Use session storage if specified, otherwise use local storage
-    this.storage = useSessionStorage ? sessionStorage : localStorage;
+    // Check if we're in a browser environment
+    const isBrowser = typeof window !== 'undefined';
+    
+    // Use memory storage for server-side rendering
+    if (!isBrowser) {
+      this.storage = new MemoryStorage();
+    } else {
+      // Use session storage if specified, otherwise use local storage
+      this.storage = useSessionStorage ? sessionStorage : localStorage;
+    }
   }
   
   /**

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getCurrentUserId } from '@/lib/auth-with-systems';
+import { toNumber } from '@/lib/decimal-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,8 +52,7 @@ export async function GET(req: NextRequest) {
       },
       take: limit
     });
-    
-    // Transform the data to match the expected format in the client
+      // Transform the data to match the expected format in the client
     const formattedLogs = systemLogs.map(log => ({
       id: log.id,
       level: getMappedLogLevel(log.type),
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       timestamp: log.logDate.toISOString(),
       source: log.systemName || 'system',
       type: log.type,
-      value: log.value,
+      value: toNumber(log.value),
       unit: log.unit,
       note: log.note,
       userName: log.user.name || log.user.email,

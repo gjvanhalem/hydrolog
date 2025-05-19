@@ -23,6 +23,8 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NODE_ENV=production
+# Set a default DATABASE_URL if not provided at runtime
+ENV DATABASE_URL="postgresql://postgres:${POSTGRES_PASSWORD:-hydrolog_password}@postgres:5432/hydrolog?schema=public"
 # Install curl and PostgreSQL client for connectivity checks
 RUN apk --no-cache add curl postgresql-client
 # Configure npm for better network resilience

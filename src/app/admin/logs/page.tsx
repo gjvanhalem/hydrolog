@@ -1,11 +1,5 @@
 import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
-
-// Dynamically import the client component with client-side rendering only
-const LogsClient = dynamic(
-  () => import('.'),
-  { ssr: false }
-);
+import LogsClientWrapper from './client-wrapper';
 
 export const metadata: Metadata = {
   title: 'HydroLog - Logs & Monitoring',
@@ -23,11 +17,10 @@ export default function LogsPage() {
           className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to Admin Dashboard
-        </a>
-      </div>
+        </a>      </div>
       
       <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
-        <LogsClient />
+        <LogsClientWrapper />
       </div>
     </div>
   );

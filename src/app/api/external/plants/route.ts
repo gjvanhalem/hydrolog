@@ -39,11 +39,11 @@ export async function GET() {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    logger.info('Fetching external plant data');
+      logger.info('Fetching external plant data');
     
     // Fetch plant data from the external service
-    const response = await fetch('http://localhost:4000/api/plants');
+    const externalApiUrl = process.env.EXTERNAL_PLANTS_API_URL || 'http://localhost:4000/api/plants';
+    const response = await fetch(externalApiUrl);
     
     if (!response.ok) {
       throw new Error(`External API error: ${response.statusText}`);
