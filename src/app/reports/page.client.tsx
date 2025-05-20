@@ -293,7 +293,8 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
             >
               Plant History
             </button>
-          </div>          {activeTab === 'system-charts' && (
+          </div>          
+          {activeTab === 'system-charts' && (
             <select
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value as TimeFrame)}
@@ -304,14 +305,12 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
               <option value="year">Last Year</option>
             </select>
           )}
-          {activeTab === 'log-history' && (
-            <a
-              href="/system/record"
-              className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
-            >
-              Record New Measurement
-            </a>
-          )}
+          <a
+            href="/system/record"
+            className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+          >
+            Record New Measurement
+          </a>
         </div>
       </div>      {activeTab === 'system-charts' ? (
         !activeSystem ? (

@@ -118,9 +118,39 @@ export default async function PlantPage({ params }: PlantPageProps) {
     notFound();
   }
   // Filter active plants to only include those from the same system
-  const plantsInSameSystem = activePlants
-    .filter(p => p.systemId === plant.systemId)
-    .map(p => convertDecimalFieldsToNumbers(p));
+  interface ActivePlant {
+    id: number;
+    name: string;
+    type: string;
+    position: number | null;
+    status: string;
+    systemId: number | null;
+    ph_min?: number | null;
+    ph_max?: number | null;
+    ec_min?: number | null;
+    ec_max?: number | null;
+    ppm_min?: number | null;
+    ppm_max?: number | null;
+    external_id?: number | null;
+    startDate?: Date | string | null;
+    userId?: number | string | null;
+    createdAt?: Date | string | null;
+    updatedAt?: Date | string | null;
+  }
+
+  // Map to PlantWithParameters shape with placeholder values for missing fields
+  const plantsInSameSystem = (activePlants as ActivePlant[])
+    .filter((p: ActivePlant) => p.systemId === plant.systemId)
+    .map((p: ActivePlant) => {
+      const safe = convertDecimalFieldsToNumbers(p);
+      return {
+        ...safe,
+        startDate: safe.startDate ?? null,
+        userId: safe.userId ?? null,
+        createdAt: safe.createdAt ?? null,
+        updatedAt: safe.updatedAt ?? null,
+      };
+    });
   
   // Check if the plant has external parameters
   const plantWithSafeValues = convertDecimalFieldsToNumbers(plant);
@@ -202,8 +232,10 @@ export default async function PlantPage({ params }: PlantPageProps) {
         <div className="flex flex-col gap-6">
           {/* Top right: Log Form */}
           <section>
-            <h2 className="text-lg font-semibold mb-3 dark:text-white">Add Log</h2>
-            <PlantLogForm plantId={formattedPlant.id} />
+            <div>
+              <h2 className="text-lg font-semibold mb-3 dark:text-white">Add Log</h2>
+              <PlantLogForm plantId={formattedPlant.id} />
+            </div>
           </section>
             {/* Bottom right: Growth History */}
           <section>

@@ -151,17 +151,18 @@ export default function NewPlantPage() {
           />
             
             <div className="mt-4 mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {/* <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Plant Name
-            </label>            <input
-              type="text"
+            </label> */}
+            <input
+              type="hidden"
               required
               value={formData.name}
               className="w-full p-2 border bg-gray-100 dark:bg-gray-600 rounded dark:border-gray-600 dark:text-gray-100 cursor-not-allowed"
               placeholder="Will be set from selected plant"
               disabled
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Name will be exactly as shown in the database</p>
+            {/* <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Name will be exactly as shown in the database</p> */}
           </div>
           
           {/* Hidden input for type field that gets populated automatically */}

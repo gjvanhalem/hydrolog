@@ -168,9 +168,9 @@ export default function PlantPositionGrid({ plants, positionsPerRow, highlightPo
             <div className={`font-medium text-sm ${inDanger ? 'text-red-800 dark:text-red-300' : 'text-green-800 dark:text-green-300'}`}>
               {plant.name}
             </div>
-            <div className={`text-xs ${inDanger ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+{/*             <div className={`text-xs ${inDanger ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
               {plant.type}
-            </div>
+            </div> */}
             <div className={`text-xs ${inDanger ? 'text-red-500 dark:text-red-500' : 'text-green-500 dark:text-green-500'}`}>
               {plant.status}
             </div>

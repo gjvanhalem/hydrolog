@@ -53,7 +53,44 @@ export async function GET(req: NextRequest) {
       take: limit
     });
       // Transform the data to match the expected format in the client
-    const formattedLogs = systemLogs.map(log => ({
+    interface FormattedLog {
+      id: string;
+      level: string;
+      message: string;
+      timestamp: string;
+      source: string;
+      type: string;
+      value: number;
+      unit: string;
+      note: string | null;
+      userName: string;
+      userId: string;
+    }
+
+    interface SystemLogUser {
+      id: string;
+      name: string | null;
+      email: string;
+    }
+
+    interface SystemLogSystem {
+      id: string;
+      name: string;
+    }
+
+    interface SystemLog {
+      id: string;
+      type: string;
+      value: any;
+      unit: string;
+      note: string | null;
+      logDate: Date;
+      user: SystemLogUser;
+      system: SystemLogSystem | null;
+      systemName?: string;
+    }
+
+    const formattedLogs: FormattedLog[] = systemLogs.map((log: SystemLog) => ({
       id: log.id,
       level: getMappedLogLevel(log.type),
       message: generateLogMessage(log),

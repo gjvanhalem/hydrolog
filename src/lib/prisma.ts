@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import { logger } from './logger';
@@ -12,7 +12,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // PostgreSQL optimization options
-const prismaClientOptions: Prisma.PrismaClientOptions = {
+const prismaClientOptions = {
   // Configure connection pooling for PostgreSQL
   // These values can be adjusted based on your application's needs
   log: process.env.NODE_ENV === 'development' 
