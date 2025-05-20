@@ -15,6 +15,40 @@ export default function PlantSelector({ onPlantSelect, selectedExternalId }: Pla
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlant, setSelectedPlant] = useState<ExternalPlant | null>(null);
+  const [latestMeasurements, setLatestMeasurements] = useState<Record<string, number>>({});
+  
+  // Fetch the latest system measurements
+  useEffect(() => {
+    const fetchLatestMeasurements = async () => {
+      try {
+        const response = await fetch('/api/system/logs?activeOnly=true');
+        
+        if (response.ok) {
+          const logsData = await response.json();
+          
+          // Group logs by type, keeping only the latest
+          const logsByType: Record<string, any> = {};
+          logsData.forEach((log: any) => {
+            if (!logsByType[log.type] || new Date(log.logDate) > new Date(logsByType[log.type].logDate)) {
+              logsByType[log.type] = log;
+            }
+          });
+          
+          // Extract the latest values for each measurement type
+          const measurements: Record<string, number> = {};
+          Object.values(logsByType).forEach((log: any) => {
+            measurements[log.type] = log.value;
+          });
+          
+          setLatestMeasurements(measurements);
+        }
+      } catch (error) {
+        console.error('Failed to fetch system logs:', error);
+      }
+    };
+    
+    fetchLatestMeasurements();
+  }, []);
   
   useEffect(() => {
     async function fetchExternalPlants() {
@@ -88,7 +122,6 @@ export default function PlantSelector({ onPlantSelect, selectedExternalId }: Pla
 
     fetchExternalPlants();
   }, [selectedExternalId, onPlantSelect, externalPlants, selectedPlant]);
-
   const handlePlantSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = parseInt(e.target.value);
     
@@ -105,6 +138,30 @@ export default function PlantSelector({ onPlantSelect, selectedExternalId }: Pla
       onPlantSelect(plant);
     }
   };
+
+  // Helper function to check if a parameter is out of bounds
+  const isParameterOutOfBounds = (minValue: number | null, maxValue: number | null, currentValue: number | undefined) => {
+    if (currentValue === undefined || (minValue === null && maxValue === null)) return false;
+    
+    if (minValue !== null && currentValue < minValue) return true;
+    if (maxValue !== null && currentValue > maxValue) return true;
+    
+    return false;
+  };
+
+  // Get the current measurement values
+  const currentPh = latestMeasurements['ph_measurement'];
+  const currentEc = latestMeasurements['ec_measurement'] !== undefined ? 
+    latestMeasurements['ec_measurement'] / 1000 : undefined; // Convert µS/cm to mS/cm
+  const currentPpm = latestMeasurements['tds_measurement'];
+
+  // Check which plant parameters are out of bounds
+  const isPhOutOfBounds = selectedPlant ? 
+    isParameterOutOfBounds(selectedPlant.ph_min, selectedPlant.ph_max, currentPh) : false;
+  const isEcOutOfBounds = selectedPlant ? 
+    isParameterOutOfBounds(selectedPlant.ec_min, selectedPlant.ec_max, currentEc) : false;
+  const isPpmOutOfBounds = selectedPlant ? 
+    isParameterOutOfBounds(selectedPlant.ppm_min, selectedPlant.ppm_max, currentPpm) : false;
 
   if (loading) {
     return <div className="text-center p-4">Loading plant database...</div>;
@@ -137,20 +194,50 @@ export default function PlantSelector({ onPlantSelect, selectedExternalId }: Pla
           ))}
         </select>
       </div>
-      
-      {selectedPlant && (
+        {selectedPlant && (
         <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-4 rounded-md">
           <h3 className="font-medium text-green-700 dark:text-green-300 mb-2">Selected Plant Parameters</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          {(isPhOutOfBounds || isEcOutOfBounds || isPpmOutOfBounds) && (
+            <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded text-red-600 dark:text-red-400 text-sm">
+              <span className="font-medium">Warning:</span> Some parameters are outside the recommended range for this plant.
+            </div>
+          )}<div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <div>
-              <span className="font-medium">pH Range:</span> {selectedPlant.ph_min} - {selectedPlant.ph_max}
+              <span className="font-medium">pH Range:</span>{' '}
+              <span className={isPhOutOfBounds ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+                {selectedPlant.ph_min} - {selectedPlant.ph_max}
+                {currentPh !== undefined && (
+                  <span className="ml-1 text-gray-500 dark:text-gray-400">
+                    (Current: {currentPh.toFixed(1)})
+                  </span>
+                )}
+              </span>
             </div>
             <div>
-              <span className="font-medium">EC Range:</span> {selectedPlant.ec_min} - {selectedPlant.ec_max} mS/cm
+              <span className="font-medium">EC Range:</span>{' '}
+              <span className={isEcOutOfBounds ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+                {selectedPlant.ec_min} - {selectedPlant.ec_max} mS/cm
+                {currentEc !== undefined && (
+                  <span className="ml-1 text-gray-500 dark:text-gray-400">
+                    (Current: {currentEc.toFixed(2)} mS/cm)
+                  </span>
+                )}
+              </span>
             </div>
             <div>
-              <span className="font-medium">PPM Range:</span> {selectedPlant.ppm_min} - {selectedPlant.ppm_max} ppm
-            </div>
+              <span className="font-medium">PPM Range:</span>{' '}
+              <span className={isPpmOutOfBounds ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+                {selectedPlant.ppm_min} - {selectedPlant.ppm_max} ppm
+                {currentPpm !== undefined && (
+                  <span className="ml-1 text-gray-500 dark:text-gray-400">
+                    (Current: {currentPpm.toFixed(0)} ppm)
+                  </span>
+                )}
+              </span>
+            </div>          </div>
+          
+          <div className="mt-3 text-xs text-gray-600 dark:text-gray-400 italic">
+            <p>Parameters in <span className="text-red-600 dark:text-red-400 font-medium">red</span> indicate current system values are outside the recommended range for this plant.</p>
           </div>
         </div>
       )}

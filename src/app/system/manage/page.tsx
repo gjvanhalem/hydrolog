@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/components/AuthContext';
 import Link from 'next/link';
 import SystemLayoutEditor from './system-layout-editor';
+import RemoveAllPlantsButton from '@/app/components/RemoveAllPlantsButton';
 
 // Form state for adding a new system
 type NewSystemForm = {
@@ -246,11 +247,9 @@ export default function SystemManagePage() {
                       </>
                     )}
                   </div>
-                </div>
-
-                {/* System Actions */}
+                </div>                {/* System Actions */}
                 {userSystem.isActive && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
                     <Link 
                       href="/record"
                       className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md text-sm hover:bg-green-200 dark:hover:bg-green-800/30 flex items-center"
@@ -268,7 +267,15 @@ export default function SystemManagePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                       View Reports
-                    </Link>
+                    </Link>                    <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-sm flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <RemoveAllPlantsButton 
+                        systemId={userSystem.systemId} 
+                        systemName={userSystem.system.name}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

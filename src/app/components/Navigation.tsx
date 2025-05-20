@@ -79,7 +79,7 @@ export default function Navigation() {
       </header>
       <nav className="bg-white dark:bg-gray-800 shadow-lg">
         <div className="container mx-auto">          <ul className="flex justify-center space-x-6 py-4">            <li><Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Dashboard</Link></li>
-            <li><Link href="/plants" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Plants</Link></li>
+            {/* <li><Link href="/plants" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Plants</Link></li> */}
             <li><Link href="/reports" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Reports & History</Link></li>
             <li><Link href="/system/manage" className="text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">Manage Systems</Link></li>
           </ul>

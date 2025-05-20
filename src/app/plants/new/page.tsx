@@ -110,14 +110,13 @@ export default function NewPlantPage() {
       });
 
       const data = await response.json();
-      
-      if (!response.ok) {
+        if (!response.ok) {
         setError(data.error || 'Failed to create plant');
         setIsSubmitting(false);
         return;
       }
       
-      router.push('/plants');
+      router.push('/');
       router.refresh();
     } catch (error) {
       console.error('Error creating plant:', error);
