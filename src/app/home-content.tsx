@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "./components/AuthContext";
 import PlantPositionGrid from "./components/PlantPositionGrid";
+import FloatingAdvisor from "./components/FloatingAdvisor";
 
 type SystemLog = {
   id: number;
@@ -189,9 +190,8 @@ export default function HomeContent() {
     updatedAt: plant.updatedAt || new Date(),
     systemId: plant.systemId || 0,
     userId: plant.userId || 0
-  }));
-    return (
-    <div className="p-6">
+  }));  return (
+    <div className="p-6 flex flex-col items-center">
       <h1 className="text-3xl font-bold mb-8 dark:text-white">
         Hydroponics Dashboard
         {loading && (
@@ -200,24 +200,34 @@ export default function HomeContent() {
           </span>
         )}
       </h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">        {/* Left Column - Plant Grid */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
-          <h2 className="text-xl font-semibold mb-4 dark:text-white">Active Plants</h2>
-          <PlantPositionGrid 
-            plants={convertedPlants} 
-            positionsPerRow={positionsPerRow} 
-            className="mt-4" 
-          />
-          {plants.length === 0 && (
-            <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-              No plants yet. Add your first plant!
-            </p>
-          )}
+      <div className="flex flex-col lg:flex-row gap-8 max-w-7xl w-full justify-center items-start">
+        {/* Left Column - Plant Grid - Self-sizing card */}
+        <div className="inline-block mx-auto lg:mx-0">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold dark:text-white">Active Plants</h2>
+              <Link href="/plants/new" className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Plant
+              </Link>
+            </div>
+            <PlantPositionGrid 
+              plants={convertedPlants} 
+              positionsPerRow={positionsPerRow} 
+              className="mt-4" 
+            />
+            {plants.length === 0 && (
+              <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
+                No plants yet. Add your first plant!
+              </p>
+            )}
+          </div>
         </div>
-
-        {/* Right Column - System Status and Quick Actions (stacked) */}
-        <div className="space-y-6">
+        
+        {/* Right Column - System Status and Quick Actions (stacked) - Fixed width */}
+        <div className="space-y-6 mx-auto lg:mx-0 w-full lg:w-96">
           {/* System Status Card */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
             <h2 className="text-xl font-semibold mb-4 dark:text-white">
@@ -268,15 +278,13 @@ export default function HomeContent() {
                 <button className="w-full bg-blue-600 dark:bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors">
                   Log System Status
                 </button>
-              </Link>
-              <Link href="/reports" className="block">
+              </Link>              <Link href="/reports" className="block">
                 <button className="w-full bg-purple-600 dark:bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors">
                   View Reports
                 </button>
               </Link>
             </div>
-          </div>
-        </div>
+          </div>        </div>
       </div>
     </div>
   );
