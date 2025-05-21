@@ -57,25 +57,16 @@ export default function ReportsPage() {
         
         const systemLogsData = await systemLogsResponse.json();
         console.log('System logs data:', systemLogsData.length, 'items loaded (filtered by active system)');
-        
-        // Fetch active plants
+          // Fetch active plants
         const plantsResponse = await fetch('/api/plants');
         const plantsData = plantsResponse.ok ? await plantsResponse.json() : [];
-        console.log('Active plants data:', plantsData.length, 'items loaded');          // Fetch plant history (removed plants)
-        // The plants/history API now filters by active system
-        const plantHistoryResponse = await fetch('/api/plants/history');
+        console.log('Active plants data:', plantsData.length, 'items loaded');
         
-        let plantHistoryData: Plant[] = [];
-        if (plantHistoryResponse.ok) {
-          plantHistoryData = await plantHistoryResponse.json();
-          console.log('Plant history data:', plantHistoryData.length, 'items loaded (filtered by active system)');
-        } else if (plantHistoryResponse.status !== 404) {
-          console.error('Plant history fetch failed:', plantHistoryResponse.status);
-        }
+        // Note: Plant history has been moved to the System Management page
         
         setSystemLogs(systemLogsData);
         setPlants(plantsData);
-        setRemovedPlants(plantHistoryData);
+        setRemovedPlants([]); // Keep empty array for compatibility
       } catch (err) {
         setError('Error loading reports and history data');
         console.error('Error fetching reports and history data:', err);

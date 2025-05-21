@@ -4,7 +4,7 @@ import { getCurrentUserId } from "@/lib/auth-with-systems";
 import { getActiveUserSystem } from "@/lib/system-utils";
 import { logger } from "@/lib/logger";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const userId = await getCurrentUserId();
 
@@ -12,14 +12,42 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch the active system for the current user
-    const activeUserSystem = await getActiveUserSystem(userId);
+    // Check for systemId in query parameters
+    const url = new URL(req.url);
+    const querySystemId = url.searchParams.get('systemId');
     
-    if (!activeUserSystem) {
-      return NextResponse.json({ error: "No active system found" }, { status: 404 });
+    let system;
+    
+    if (querySystemId) {
+      // Fetch the specific system
+      const systemId = parseInt(querySystemId);
+      
+      // Verify user has access to this system
+      const userSystem = await prisma.userSystem.findFirst({
+        where: {
+          userId,
+          systemId
+        },
+        include: {
+          system: true
+        }
+      });
+      
+      if (!userSystem) {
+        return NextResponse.json({ error: "System not found or access denied" }, { status: 404 });
+      }
+      
+      system = userSystem.system;
+    } else {
+      // Fetch the active system for the current user
+      const activeUserSystem = await getActiveUserSystem(userId);
+      
+      if (!activeUserSystem) {
+        return NextResponse.json({ error: "No active system found" }, { status: 404 });
+      }
+      
+      system = activeUserSystem.system;
     }
-
-    const system = activeUserSystem.system;
 
     return NextResponse.json({
       id: system.id,

@@ -3,18 +3,18 @@ import { redirect } from 'next/navigation';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 
 export const metadata: Metadata = {
-  title: 'Redirecting to Reports & History | HydroLog',
-  description: 'Historical overview of all plants in your hydroponic system'
+  title: 'Redirecting to System Management | HydroLog',
+  description: 'Plant history is now available in the System Management section'
 };
 
 export default function HistoryPage() {
-  // Redirect users from the old plant history URL to the new combined reports page
-  // Include the tab parameter to automatically focus on the plant history tab
+  // Redirect users from the plant history URL to the system management page
+  // where plant history is now located
   return (
     <ProtectedRoute>
       {/* This will execute client-side after auth check */}
-      {typeof window !== 'undefined' && redirect('/reports?tab=plant-history')}
-      <p className="p-6">Redirecting to Reports & History page...</p>
+      {typeof window !== 'undefined' && redirect('/system/manage')}
+      <p className="p-6">Redirecting to System Management page...</p>
     </ProtectedRoute>
   );
 }

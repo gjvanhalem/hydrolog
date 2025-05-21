@@ -34,7 +34,7 @@ export default function PlantHeader({ id, name, type, position, status }: PlantH
       }
 
       router.refresh();
-      router.push('/plants');
+      router.push('/');
     } catch (error) {
       console.error('Error deleting plant:', error);
       alert(error instanceof Error ? error.message : 'Failed to delete plant. Please try again.');

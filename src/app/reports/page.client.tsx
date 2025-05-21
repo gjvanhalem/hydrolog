@@ -60,7 +60,7 @@ interface Plant {
 interface Props {
   systemLogs: SystemLog[];
   plants: Plant[];
-  removedPlants: Plant[];
+  removedPlants?: Plant[]; // Optional since plant history has been moved
   activeSystem?: {
     id: number;
     systemId: number;
@@ -73,7 +73,7 @@ interface Props {
 }
 
 type TimeFrame = 'week' | 'month' | 'year';
-type ActiveTab = 'system-charts' | 'plant-history' | 'log-history';
+type ActiveTab = 'system-charts' | 'log-history';
 
 // Chart options
 const getChartOptions = (isDarkMode: boolean): ChartOptions<'line'> => ({
@@ -134,27 +134,27 @@ const getChartOptions = (isDarkMode: boolean): ChartOptions<'line'> => ({
   }
 });
 
-export default function ReportsClient({ systemLogs, plants, removedPlants, activeSystem }: Props) {
-  const [timeframe, setTimeframe] = useState<TimeFrame>('week');  
-  // Check URL params for initial tab selection
+export default function ReportsClient({ 
+  systemLogs, 
+  plants, 
+  removedPlants = [], // Default to empty array, kept for API compatibility
+  activeSystem 
+}: Props) {
+  const [timeframe, setTimeframe] = useState<TimeFrame>('week');    // Check URL params for initial tab selection
   const initialTab = typeof window !== 'undefined' 
-    ? window.location.search.includes('tab=plant-history') 
-      ? 'plant-history'
-      : window.location.search.includes('tab=log-history')
-        ? 'log-history'
-        : 'system-charts'
+    ? window.location.search.includes('tab=log-history')
+      ? 'log-history'
+      : 'system-charts'
     : 'system-charts';
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
   const isDarkMode = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const chartOptions = getChartOptions(isDarkMode);
-    // Effect to sync URL with active tab
+  // Effect to sync URL with active tab
   useEffect(() => {
     if (typeof window !== 'undefined') {
       let url = '/reports';
       
-      if (activeTab === 'plant-history') {
-        url = '/reports?tab=plant-history';
-      } else if (activeTab === 'log-history') {
+      if (activeTab === 'log-history') {
         url = '/reports?tab=log-history';
       }
       
@@ -225,19 +225,8 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
       };
     } catch (error) {
       console.error(`Error processing ${type} data:`, error);
-      return { labels: [], datasets: [] };
-    }
+      return { labels: [], datasets: [] };    }
   };
-  // Group removed plants by date for the history view
-  const groupedPlants: Record<string, Plant[]> = {};
-  
-  removedPlants.forEach(plant => {
-    const dateString = new Date(plant.updatedAt).toLocaleDateString();
-    if (!groupedPlants[dateString]) {
-      groupedPlants[dateString] = [];
-    }
-    groupedPlants[dateString].push(plant);
-  });
   
   // Group system logs by date for the log history view
   const groupedSystemLogs: Record<string, SystemLog[]> = {};
@@ -272,8 +261,7 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
               onClick={() => setActiveTab('system-charts')}
             >
               System Charts
-            </button>
-            <button
+            </button>            <button
               className={`px-4 py-2 ${
                 activeTab === 'log-history'
                   ? 'bg-green-600 text-white'
@@ -282,16 +270,6 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
               onClick={() => setActiveTab('log-history')}
             >
               Log History
-            </button>
-            <button
-              className={`px-4 py-2 ${
-                activeTab === 'plant-history'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-              }`}
-              onClick={() => setActiveTab('plant-history')}
-            >
-              Plant History
             </button>
           </div>          
           {activeTab === 'system-charts' && (
@@ -311,8 +289,9 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
           >
             Record New Measurement
           </a>
-        </div>
-      </div>      {activeTab === 'system-charts' ? (
+        </div>      </div>
+      
+      {activeTab === 'system-charts' ? (
         !activeSystem ? (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
             <p className="text-gray-600 dark:text-gray-400 text-center py-6">
@@ -360,7 +339,7 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
             </div>
           </div>
         )
-      ) : activeTab === 'log-history' ? (
+      ) : (
         !activeSystem ? (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
             <p className="text-gray-600 dark:text-gray-400 text-center py-6">
@@ -402,75 +381,6 @@ export default function ReportsClient({ systemLogs, plants, removedPlants, activ
                 </div>
               </div>
             ))}
-          </div>
-        )
-      ) : (
-        !activeSystem ? (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
-            <p className="text-gray-600 dark:text-gray-400 text-center py-6">
-              No active system selected. Please select a system to view plant history.
-            </p>
-          </div>
-        ) : Object.entries(groupedPlants).length > 0 ? (
-          <div className="space-y-6">
-            {Object.entries(groupedPlants).map(([date, plantsGroup]) => (
-              <div key={date} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50">
-                <div className="bg-green-50 dark:bg-green-900/30 px-6 py-3 rounded-t-lg">
-                  <h2 className="text-lg font-semibold text-green-800 dark:text-green-300">{date}</h2>
-                </div>
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {plantsGroup.map((plant) => (
-                    <div key={plant.id} className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h2 className="text-xl font-semibold dark:text-white">{plant.name}</h2>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {plant.type} • Previously in Position {plant.position || 'Unknown'}
-                          </p>                        </div>
-                        <div className="text-right text-sm text-gray-600 dark:text-gray-400">
-                          <div>Started: {new Date(plant.startDate).toLocaleDateString()}</div>
-                          <div>Removed: {new Date(plant.updatedAt).toLocaleDateString()}</div>
-                        </div>
-                      </div>
-
-                      {/* Growth Timeline */}
-                      <div className="mt-4 space-y-3">
-                        {plant.logs.map((log) => (
-                          <div key={log.id} className="border-l-2 border-green-500 pl-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <span className="font-medium dark:text-gray-100">
-                                  {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
-                                </span>
-                                {log.note && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {log.note}
-                                  </p>
-                                )}                              </div>
-                              <time className="text-sm text-gray-600 dark:text-gray-400">
-                                {new Date(log.logDate).toLocaleDateString()}
-                              </time>
-                            </div>
-                            {log.photo && (
-                              <img
-                                src={log.photo}
-                                alt={`Growth stage: ${log.status}`}
-                                className="mt-2 rounded-lg max-h-48 object-cover"
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-6">
-            <p className="text-gray-600 dark:text-gray-400 text-center py-4">
-              No plants removed yet from {activeSystem.system.name}.
-            </p>
           </div>
         )
       )}

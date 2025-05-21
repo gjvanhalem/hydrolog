@@ -5,7 +5,7 @@ import { getActiveUserSystem } from '@/lib/system-utils';
 import { logger } from '@/lib/logger';
 import { toNumber } from '@/lib/decimal-utils';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const userId = await getCurrentUserId();
     
@@ -19,9 +19,16 @@ export async function GET() {
         { status: 401 }
       );
     }
-      // Get the active system for this user
-    const activeUserSystem = await getActiveUserSystem(userId);
-    const systemId = activeUserSystem?.systemId;
+    
+    // Check for systemId in query parameters
+    const url = new URL(req.url);
+    let systemId = url.searchParams.get('systemId') ? parseInt(url.searchParams.get('systemId')!) : null;
+    
+    // If no systemId provided, fall back to active system
+    if (!systemId) {
+      const activeUserSystem = await getActiveUserSystem(userId);
+      systemId = activeUserSystem?.systemId || null;
+    }
     
     logger.info('Fetching plant history for user', { userId, systemId });
     
