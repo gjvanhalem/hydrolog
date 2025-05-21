@@ -44,13 +44,12 @@ export default function PlantHeader({ id, name, type, position, status }: PlantH
     }
   };
   return (
-    <div className="mb-8">
-      <div className="flex justify-between items-start mb-2">
+    <div className="mb-8">      <div className="flex justify-between items-start gap-8 mb-2">
         <h1 className="text-3xl font-bold dark:text-white">{name}</h1>
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 disabled:bg-red-400 dark:disabled:bg-red-800 transition-colors"
+          className="px-4 py-2 ml-4 text-sm font-medium text-white bg-red-600 dark:bg-red-700 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 disabled:bg-red-400 dark:disabled:bg-red-800 transition-colors whitespace-nowrap"
         >
           {isDeleting ? 'Removing...' : 'Remove Plant'}
         </button>

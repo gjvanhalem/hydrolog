@@ -179,7 +179,7 @@ export default async function PlantPage({ params }: PlantPageProps) {
   };
   
   return (
-    <div className="p-6">
+    <div className="p-6 flex flex-col items-center gap-6">
       {/* Plant Header */}
       <PlantHeader 
         id={formattedPlant.id}
@@ -188,7 +188,7 @@ export default async function PlantPage({ params }: PlantPageProps) {
         position={formattedPlant.position}
         status={formattedPlant.status}
       />
-      
+       
       {/* Main 2-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left column */}
